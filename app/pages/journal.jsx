@@ -52,7 +52,7 @@ function Journal() {
   // qualifying days (daily net >= threshold) per account with an inactivity rule, filtered by scope
   const qualDays = {};
   ctx.accounts.forEach(a => {
-    if (!a.hasInactivity || a.status === 'challenge') return;
+    if (!a.hasInactivity) return;
     if (scope !== 'all' && scope !== 'ref' && a.id !== scope) return;
     const minNet = Number(a.inactMinNet) || 0;
     const d = window.dailyPnl(ctx.trades, a.id);

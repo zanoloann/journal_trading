@@ -90,19 +90,13 @@ function ScopeSelector() {
               {ctx.scope === 'all' && <window.Icon name="check" size={15} style={{ marginLeft: 'auto', color: 'var(--profit)' }} />}
             </button>
             <div style={{ height: 1, background: 'var(--border)', margin: '5px 4px' }} />
-            {ctx.accounts.slice().sort((x, y) => (x.status === 'challenge' ? 1 : 0) - (y.status === 'challenge' ? 1 : 0)).map((a, idx, arr) => {
-              const firstChallenge = a.status === 'challenge' && (idx === 0 || arr[idx - 1].status !== 'challenge');
-              return (
-              <React.Fragment key={a.id}>
-              {firstChallenge && <div style={{ display: 'flex', alignItems: 'center', gap: 6, margin: '6px 8px 3px', fontSize: 10.5, fontWeight: 700, color: 'var(--ink-3)', textTransform: 'uppercase', letterSpacing: '.04em' }}><window.Icon name="target" size={11} /> Challenges</div>}
-              <button className="tj-scopeitem" onClick={() => {ctx.setScope(a.id); setOpen(false);}}>
+            {ctx.accounts.map((a) => (
+              <button key={a.id} className="tj-scopeitem" onClick={() => {ctx.setScope(a.id); setOpen(false);}}>
                 <window.AccountDot color={a.color} />
                 <span style={{ fontWeight: 600 }}>{a.name}</span>
                 {ctx.scope === a.id && <window.Icon name="check" size={15} style={{ marginLeft: 'auto', color: 'var(--profit)' }} />}
               </button>
-              </React.Fragment>
-              );
-            })}
+            ))}
           </div>
         </>
       }
@@ -197,7 +191,6 @@ function App() {
   const [route, setRoute] = useStateApp('dashboard');
   const [trades, setTrades] = useStateApp(() => sortTradesDesc(ensureUniqueIds(loadLS(LS.trades, window.TRADES))));
   const [accounts, setAccounts] = useStateApp(() => loadLS(LS.accounts, window.ACCOUNTS));
-  window.__liveAccounts = accounts; // let data.jsx's refLeg() know current account statuses (challenge vs funded)
   const [scope, setScope] = useStateApp('ref');
   const [modal, setModal] = useStateApp(null); // {type:'trade'|'detail'|'account', id}
   const [confirm, setConfirm] = useStateApp(null); // {title, message, confirmLabel, onConfirm}
@@ -422,11 +415,10 @@ function App() {
         return n;
       }));
     },
-    validateChallenge: (id) => setAccounts((prev) => prev.map((a) => a.id === id ? { ...a, status: 'funded' } : a)),
     archiveAccount: (id, val = true) => setAccounts((prev) => prev.map((a) => a.id === id ? { ...a, archived: val } : a)),
     resetAccount: (id) => {
       setTrades((prev) => prev.map((t) => t.accounts ? { ...t, accounts: t.accounts.filter((l) => l.accountId !== id) } : t).filter((t) => t.noTrade || t.replay || !t.accounts || t.accounts.length > 0));
-      setAccounts((prev) => prev.map((a) => a.id === id ? { ...a, archived: false, opened: window.todayIso(), startDate: a.status === 'challenge' ? window.todayIso() : a.startDate, lastTrade: null, adjustments: [], payouts: [] } : a));
+      setAccounts((prev) => prev.map((a) => a.id === id ? { ...a, archived: false, opened: window.todayIso(), lastTrade: null, adjustments: [], payouts: [] } : a));
     },
     addPayout: (accountId, entry) => setAccounts((prev) => prev.map((a) => a.id === accountId ? { ...a, payouts: [...(a.payouts || []), entry] } : a)),
     deletePayout: (accountId, payoutId) => setAccounts((prev) => prev.map((a) => a.id === accountId ? { ...a, payouts: (a.payouts || []).filter((p) => p.id !== payoutId) } : a)),
@@ -526,13 +518,6 @@ function App() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               {(route === 'dashboard' || route === 'journal' || route === 'calendar') && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  {chalIds.length > 0 && (
-                    <button className="tj-iconbtn" title={chalMode === 'with' ? 'Masquer les comptes challenge' : 'Inclure les comptes challenge'}
-                      onClick={() => setChalMode(m => m === 'with' ? 'without' : 'with')}
-                      style={{ width: 'auto', padding: '0 12px', gap: 7, display: 'inline-flex', alignItems: 'center', fontSize: 12.5, fontWeight: 600, color: chalMode === 'with' ? 'var(--ink)' : 'var(--ink-2)', background: chalMode === 'with' ? 'var(--surface-2)' : 'var(--surface)', borderColor: chalMode === 'with' ? 'var(--ink)' : 'var(--border)' }}>
-                      {chalMode === 'with' && <window.Icon name="check" size={13} stroke={3} />} +challenges
-                    </button>
-                  )}
                   {window.computeStats(trades, window.REPLAY_ACCOUNT_ID).total > 0 && (
                     <button className="tj-iconbtn" title={showReplay ? 'Masquer la comparaison avec le Replay' : 'Comparer avec le Replay'}
                       onClick={() => setShowReplay(v => !v)}

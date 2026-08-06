@@ -103,9 +103,8 @@ function ImportModal({ onClose, initialText }) {
   });
   const refAcc = ctx.accounts.find(a => a.id === refId) || ctx.accounts.find(a => a.role === 'master');
   function defaultApplied(ref) {
-    const includeChal = ref && ref.status === 'challenge';
     const out = {};
-    ctx.accounts.forEach(a => { out[a.id] = a.id === (ref && ref.id) || a.status !== 'challenge' || includeChal; });
+    ctx.accounts.forEach(a => { out[a.id] = true; });
     return out;
   }
   const [applied, setApplied] = useStateImp(() => defaultApplied(refAcc));
@@ -208,17 +207,13 @@ function ImportModal({ onClose, initialText }) {
                 Ce compte uniquement (pas de mise à l'échelle)
               </button>
             </div>
-            <p style={{ margin: '0 0 10px', fontSize: 12, color: 'var(--ink-3)' }}>Les comptes challenge ne sont pas cochés par défaut, sauf si le compte de référence est lui-même un challenge.</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {ctx.accounts.slice().sort((x, y) => (x.status === 'challenge' ? 1 : 0) - (y.status === 'challenge' ? 1 : 0)).map((a, idx, arr) => {
+              {ctx.accounts.map((a) => {
                 const isMaster = a.role === 'master';
                 const isRef = refAcc && a.id === refAcc.id;
                 const on = !!applied[a.id];
-                const firstChallenge = a.status === 'challenge' && (idx === 0 || arr[idx - 1].status !== 'challenge');
                 return (
-                  <React.Fragment key={a.id}>
-                  {firstChallenge && <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '6px 2px 2px', fontSize: 11, fontWeight: 700, color: 'var(--ink-3)', textTransform: 'uppercase', letterSpacing: '.04em' }}><window.Icon name="target" size={12} /> Comptes en challenge</div>}
-                  <div style={{ display: 'grid', gridTemplateColumns: '28px 1fr auto', gap: 12, alignItems: 'center', padding: '10px 14px', borderRadius: 11, border: '1px solid ' + (on ? 'var(--ink)' : 'var(--border)'), background: on ? 'var(--surface)' : 'var(--surface-2)', opacity: on ? 1 : .65 }}>
+                  <div key={a.id} style={{ display: 'grid', gridTemplateColumns: '28px 1fr auto', gap: 12, alignItems: 'center', padding: '10px 14px', borderRadius: 11, border: '1px solid ' + (on ? 'var(--ink)' : 'var(--border)'), background: on ? 'var(--surface)' : 'var(--surface-2)', opacity: on ? 1 : .65 }}>
                     <button onClick={() => toggleApplied(a.id)} disabled={isRef}
                       style={{ width: 22, height: 22, borderRadius: 7, border: '1.5px solid ' + (on ? 'var(--ink)' : 'var(--border-strong)'), background: on ? 'var(--ink)' : 'transparent', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: isRef ? 'default' : 'pointer' }}>
                       {on && <window.Icon name="check" size={14} stroke={3} />}
@@ -227,12 +222,10 @@ function ImportModal({ onClose, initialText }) {
                       <window.AccountDot color={a.color} />
                       <span style={{ fontWeight: 600, fontSize: 13.5 }}>{a.name}</span>
                       {isMaster && <window.Badge tone="ink" style={{ fontSize: 10 }}>Maître</window.Badge>}
-                      {a.status === 'challenge' && <window.Badge tone="warn" style={{ fontSize: 10 }}>Challenge</window.Badge>}
                       {isRef && <window.Badge style={{ fontSize: 10 }}>Réf.</window.Badge>}
                     </div>
                     <span style={{ fontSize: 12.5, color: 'var(--ink-3)' }}>{isMaster || isRef ? '—' : '×' + a.coef}</span>
                   </div>
-                  </React.Fragment>
                 );
               })}
             </div>

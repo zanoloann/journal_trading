@@ -14,13 +14,11 @@ function AccountHealth({ compact }) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {ctx.accounts.map(a => {
           const info = window.inactivityInfo(a, ctx.trades);
-          const chal = window.challengeInfo(a);
           const inactive = window.isInactive(a, ctx.trades);
           const bal = window.accountBalance(a, ctx.trades);
           const pnlPct = ((bal - a.size) / a.size) * 100;
           const tone = info ? info.color : null;
           const toneVar = tone === 'profit' ? 'var(--profit)' : tone === 'warn' ? 'var(--warn)' : tone === 'loss' ? 'var(--loss)' : 'var(--ink-3)';
-          const chalVar = chal ? (chal.color === 'profit' ? 'var(--ink)' : chal.color === 'warn' ? 'var(--warn)' : 'var(--loss)') : 'var(--ink-3)';
           return (
             <div key={a.id} onClick={() => { ctx.setScope(a.id); ctx.nav('accounts'); }}
               className="tj-row" style={{
@@ -33,18 +31,12 @@ function AccountHealth({ compact }) {
                   <window.AccountDot color={a.color} />
                   <span style={{ fontWeight: 600, fontSize: 13.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.name}</span>
                   {a.role === 'master' && <window.Badge tone="ink" style={{ fontSize: 10, padding: '2px 7px' }}>Maître</window.Badge>}
-                  {a.status === 'challenge' && <window.Badge tone="warn" style={{ fontSize: 10, padding: '2px 7px' }}>Challenge</window.Badge>}
                 </div>
                 {info ? (
                   <div style={{ fontSize: 11.5, color: 'var(--ink-3)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                     <window.Icon name="calendar" size={12} />
                     <span style={{ whiteSpace: 'nowrap' }}>Inactivité dès le <strong style={{ color: 'var(--ink-2)' }}>{window.fmtDateFR(info.deadline)}</strong></span>
                     {info.basis === 'opening' && <span style={{ opacity: .7, whiteSpace: 'nowrap' }}>(ouverture)</span>}
-                  </div>
-                ) : chal ? (
-                  <div style={{ fontSize: 11.5, color: 'var(--ink-3)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                    <window.Icon name="target" size={12} />
-                    <span style={{ whiteSpace: 'nowrap' }}>Fin du challenge le <strong style={{ color: 'var(--ink-2)' }}>{window.fmtDateFR(chal.deadline)}</strong></span>
                   </div>
                 ) : (
                   <div style={{ fontSize: 12, color: 'var(--ink-3)', marginTop: 3 }}>
@@ -58,11 +50,6 @@ function AccountHealth({ compact }) {
                   <div style={{ fontSize: 11.5, marginTop: 3, fontWeight: 700, color: toneVar, display: 'flex', alignItems: 'center', gap: 4, justifyContent: 'flex-end', whiteSpace: 'nowrap' }}>
                     {info.remaining <= 5 && <window.Icon name="alert" size={12} />}
                     {info.remaining > 0 ? 'reste ' + info.remaining + ' j' : 'inactif'}
-                  </div>
-                ) : chal ? (
-                  <div style={{ fontSize: 11.5, marginTop: 3, fontWeight: 700, color: chalVar, display: 'flex', alignItems: 'center', gap: 4, justifyContent: 'flex-end', whiteSpace: 'nowrap' }}>
-                    {chal.remaining <= 5 && chal.remaining >= 0 && <window.Icon name="alert" size={12} />}
-                    {chal.remaining > 0 ? 'reste ' + chal.remaining + ' j' : (chal.remaining === 0 ? 'dernier jour' : 'expiré')}
                   </div>
                 ) : (
                   <div style={{ fontSize: 11.5, marginTop: 3, color: 'var(--ink-3)', display: 'flex', alignItems: 'center', gap: 4, justifyContent: 'flex-end', whiteSpace: 'nowrap' }}></div>

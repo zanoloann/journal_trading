@@ -68,13 +68,13 @@ function SessionModal({ onClose }) {
   const [manual, setManual] = useStateM({ symbol: 'MES', contracts: 1, mindset: 2, amounts: {} });
   const [applied, setApplied] = useStateM(() => {
     const init = {};
-    ctx.accounts.forEach(a => { init[a.id] = { on: a.status !== 'challenge', coef: a.coef }; });
+    ctx.accounts.forEach(a => { init[a.id] = { on: true, coef: a.coef }; });
     return init;
   });
 
   function defaultApplied() {
     const init = {};
-    ctx.accounts.forEach(a => { init[a.id] = { on: a.status !== 'challenge', coef: a.coef }; });
+    ctx.accounts.forEach(a => { init[a.id] = { on: true, coef: a.coef }; });
     return init;
   }
   function ingestFile(file) {
@@ -266,7 +266,7 @@ function SessionModal({ onClose }) {
                   <>
                   <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink-2)', marginBottom: 7 }}>Comptes utilisés ce jour <span style={{ color: 'var(--ink-3)', fontWeight: 400 }}>· {nbOn} sélectionné{nbOn > 1 ? 's' : ''}</span></div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
-                    {ctx.accounts.slice().sort((x, y) => (x.status === 'challenge' ? 1 : 0) - (y.status === 'challenge' ? 1 : 0)).map(a => {
+                    {ctx.accounts.map(a => {
                       const on = d.applied[a.id] && d.applied[a.id].on;
                       return (
                         <button key={a.id} onClick={() => toggleDayAcc(i, a.id)} style={{
@@ -277,7 +277,6 @@ function SessionModal({ onClose }) {
                           <span style={{ width: 16, height: 16, borderRadius: 5, border: '1.5px solid ' + (on ? 'var(--ink)' : 'var(--border-strong)'), background: on ? 'var(--ink)' : 'transparent', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{on && <window.Icon name="check" size={11} stroke={3} />}</span>
                           <window.AccountDot color={a.color} />
                           {a.name}{a.role !== 'master' ? ' ×' + a.coef : ''}
-                          {a.status === 'challenge' && <window.Badge tone="warn" style={{ fontSize: 9, padding: '1px 5px' }}>Ch.</window.Badge>}
                         </button>
                       );
                     })}
@@ -439,15 +438,12 @@ function SessionModal({ onClose }) {
           <span style={{ fontSize: 12.5, color: 'var(--ink-3)' }}>{selected.length} comptes</span>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {ctx.accounts.slice().sort((x, y) => (x.status === 'challenge' ? 1 : 0) - (y.status === 'challenge' ? 1 : 0)).map((a, idx, arr) => {
+          {ctx.accounts.map((a) => {
             const isMaster = a.role === 'master';
             const ap = applied[a.id];
             const on = ap.on;
-            const firstChallenge = a.status === 'challenge' && (idx === 0 || arr[idx - 1].status !== 'challenge');
             return (
-              <React.Fragment key={a.id}>
-              {firstChallenge && <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '6px 2px 2px', fontSize: 11, fontWeight: 700, color: 'var(--ink-3)', textTransform: 'uppercase', letterSpacing: '.04em' }}><window.Icon name="target" size={12} /> Comptes en challenge</div>}
-              <div style={{ display: 'grid', gridTemplateColumns: '28px 1fr auto', gap: 12, alignItems: 'center', padding: '10px 14px', borderRadius: 11, border: '1px solid ' + (on ? 'var(--ink)' : 'var(--border)'), background: on ? 'var(--surface)' : 'var(--surface-2)', opacity: on ? 1 : .65 }}>
+              <div key={a.id} style={{ display: 'grid', gridTemplateColumns: '28px 1fr auto', gap: 12, alignItems: 'center', padding: '10px 14px', borderRadius: 11, border: '1px solid ' + (on ? 'var(--ink)' : 'var(--border)'), background: on ? 'var(--surface)' : 'var(--surface-2)', opacity: on ? 1 : .65 }}>
                 <button onClick={() => setApplied(p => ({ ...p, [a.id]: { ...p[a.id], on: !p[a.id].on } }))}
                   style={{ width: 22, height: 22, borderRadius: 7, border: '1.5px solid ' + (on ? 'var(--ink)' : 'var(--border-strong)'), background: on ? 'var(--ink)' : 'transparent', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
                   {on && <window.Icon name="check" size={14} stroke={3} />}
@@ -477,7 +473,6 @@ function SessionModal({ onClose }) {
                   </>)}
                 </div>
               </div>
-              </React.Fragment>
             );
           })}
         </div>

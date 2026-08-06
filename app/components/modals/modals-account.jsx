@@ -8,8 +8,8 @@ function AccountModal({ accountId, onClose }) {
   const editing = accountId !== 'new';
   const existing = editing ? ctx.accounts.find(a => a.id === accountId) : null;
   const [f, setF] = useStateM(existing || {
-    name: '', firm: '', accountTypeId: '', size: 50000, role: 'slave', coef: 2, status: 'challenge',
-    color: '#1f8a5b', eod: 2000, opened: window.todayIso(), target: 3000, startDate: window.todayIso(), duration: 30,
+    name: '', firm: '', accountTypeId: '', size: 50000, role: 'slave', coef: 2, status: 'funded',
+    color: '#1f8a5b', eod: 2000, opened: window.todayIso(), target: 3000,
     hasInactivity: false, inactMinDays: 4, inactMinNet: 50, inactWindow: 7,
     ddType: 'trailing', ddAmount: 2000, ddStop: 52100,
   });
@@ -39,10 +39,9 @@ function AccountModal({ accountId, onClose }) {
     });
   }
   const palette = ['#1f8a5b', '#2a6fdb', '#9b6dff', '#b9802a', '#d4504e', '#1b1a17'];
-  const isChallenge = f.status === 'challenge';
   const isMaster = f.role === 'master';
   function save() {
-    const instrument = isMaster ? 'MES+ES' : (isChallenge ? 'ES' : 'MES');
+    const instrument = isMaster ? 'MES+ES' : (f.instrument || 'MES');
     const base = { ...f, size: Number(f.size), coef: Math.max(1, Math.round(Number(f.coef)) || 1), eod: Number(f.eod), instrument };
     base.hasInactivity = !!f.hasInactivity;
     if (f.hasInactivity) {
@@ -50,7 +49,6 @@ function AccountModal({ accountId, onClose }) {
       base.inactMinNet = Number(f.inactMinNet) || 0;
       base.inactWindow = Math.max(1, Number(f.inactWindow) || 1);
     }
-    if (isChallenge) { base.target = Number(f.target); base.startDate = f.startDate; base.duration = (f.duration === '' || f.duration == null) ? null : Number(f.duration); }
     base.ddType = f.ddType || 'none';
     if (base.ddType !== 'none') {
       base.ddAmount = Number(f.ddAmount) || 0;
@@ -77,13 +75,10 @@ function AccountModal({ accountId, onClose }) {
   return (
     <Modal onClose={onClose} width={540}
       title={editing ? 'Modifier le compte' : 'Nouveau compte'}
-      subtitle={editing ? f.name : 'Ajoutez un compte après validation d\'un challenge prop firm'}
+      subtitle={editing ? f.name : 'Ajoutez un compte pour commencer à enregistrer vos trades'}
       footer={<><window.Button variant="ghost" onClick={onClose}>Annuler</window.Button><window.Button variant="primary" icon="check" onClick={save}>{editing ? 'Enregistrer' : 'Créer le compte'}</window.Button></>}>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
         <Field label="Nom du compte"><input style={inputStyle} value={f.name} onChange={e => set('name', e.target.value)} placeholder="ex. PA-04" /></Field>
-        <Field label="Statut">
-          <window.Segmented value={f.status} onChange={v => set('status', v)} options={[{ value: 'challenge', label: 'Challenge' }, { value: 'funded', label: 'Financé' }]} />
-        </Field>
         <Field label="Prop firm" hint={f.firm ? ('Frais : ' + window.fmtNum(window.feeFor(f.firm, 'MES'), 2) + ' $/contrat') : 'Gérées dans Paramètres'}>
           <select style={inputStyle} value={f.firm || ''} onChange={e => applyType(e.target.value, '')}>
             <option value="" disabled>Choisir une prop firm…</option>
@@ -127,19 +122,6 @@ function AccountModal({ accountId, onClose }) {
           <div style={{ fontSize: 13, color: 'var(--ink-3)', marginTop: 8 }}>Aucun drawdown maximum pour ce type de compte.</div>
         )}
       </div>
-
-      {isChallenge && (
-        <div style={{ marginTop: 16, padding: 16, borderRadius: 12, background: 'var(--warn-bg)', border: '1px solid color-mix(in oklab, var(--warn) 25%, transparent)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, color: 'var(--warn)', fontWeight: 700, fontSize: 13 }}>
-            <window.Icon name="target" size={16} /> Paramètres du challenge
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14 }}>
-            <Field label="Objectif ($)"><input type="number" step="500" style={inputStyle} value={f.target} onChange={e => set('target', e.target.value)} /></Field>
-            <Field label="Date de début"><input type="date" style={inputStyle} value={f.startDate} onChange={e => set('startDate', e.target.value)} /></Field>
-            <Field label="Durée (jours)" hint="Laisser vide si aucune limite"><input type="number" step="1" min="1" style={inputStyle} value={f.duration == null ? '' : f.duration} onChange={e => set('duration', e.target.value)} placeholder="illimité" /></Field>
-          </div>
-        </div>
-      )}
 
       {/* inactivity rule — read-only summary (configured in Paramètres, per account type) */}
       <div style={{ marginTop: 16, padding: 16, borderRadius: 12, background: 'var(--surface-2)', border: '1px solid var(--border)' }}>

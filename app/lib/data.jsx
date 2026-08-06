@@ -1,5 +1,5 @@
-// data.jsx — data model + helpers (SP500 futures: MES daily / ES challenges)
-// Accounts: master trades MES + ES; funded slaves mirror MES; challenge accounts use ES.
+// data.jsx — data model + helpers (SP500 futures: MES daily / ES)
+// Accounts: master trades MES + ES; slaves mirror MES.
 
 const FEE = 1.04; // $ per contract (round turn)
 
@@ -113,10 +113,9 @@ function fmtNum(v, dec) { return v.toLocaleString('fr-FR', { minimumFractionDigi
 function fmtPct(v, dec) { return (v > 0 ? '+' : '') + v.toFixed(dec ?? 1) + ' %'; }
 function fmtDateFR(iso) { if (!iso) return '—'; const d = new Date(iso + 'T00:00:00'); return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }); }
 
-// the "reference" leg of a trade: whichever FUNDED account (never a challenge account) had the
-// smallest coefficient that day (normally 1×) — this is whichever account was acting as
-// master/reference at the time, independent of current structural role. Challenge accounts can
-// never be the reference, even if their coefficient happens to be the smallest that day.
+// the "reference" leg of a trade: whichever account had the smallest coefficient that day
+// (normally 1×) — this is whichever account was acting as master/reference at the time,
+// independent of current structural role.
 // Explicit reference/master account id for a NEW trade: whichever account has the structural
 // "master" role right now, but ONLY if that account's leg is actually part of this trade — a
 // solo trade on one account with coef 1 does NOT make that account the reference unless it is
@@ -130,20 +129,15 @@ function computeRefAccountId(legs, accounts) {
 // the "reference" leg of a trade. New trades carry an explicit refAccountId set at entry time
 // (the structural master account, only if it was actually applied to that trade — never inferred
 // from coefficients). Legacy trades (imported/created before this field existed) fall back to the
-// old heuristic: smallest coefficient among non-challenge accounts.
+// old heuristic: smallest coefficient among the trade's legs.
 function refLeg(trade) {
   if (!trade.accounts || !trade.accounts.length) return null;
   if (trade.refAccountId !== undefined) {
     if (trade.refAccountId === null) return null;
     return trade.accounts.find(l => l.accountId === trade.refAccountId) || null;
   }
-  const liveAccounts = window.__liveAccounts || [];
-  const accStatus = {};
-  liveAccounts.forEach(a => { accStatus[a.id] = a.status; });
-  const eligible = trade.accounts.filter(l => accStatus[l.accountId] !== 'challenge');
-  if (!eligible.length) return null; // trade only touched challenge account(s) — no master/reference leg
-  const mc = Math.min(...eligible.map(l => Math.abs(Number(l.coef)) || 1));
-  return eligible.find(l => (Math.abs(Number(l.coef)) || 1) === mc) || eligible[0];
+  const mc = Math.min(...trade.accounts.map(l => Math.abs(Number(l.coef)) || 1));
+  return trade.accounts.find(l => (Math.abs(Number(l.coef)) || 1) === mc) || trade.accounts[0];
 }
 
 function tradeAgg(trade, scope, field) {
@@ -259,7 +253,7 @@ function daysBetweenIso(a, b) { return Math.round((new Date(b + 'T00:00:00') - n
 // deadline ("date de début d'inactivité") = anchor + windowDays.
 // remaining = deadline - today.  Colors: >15 green, 6..15 amber, <=5 red.
 function inactivityInfo(account, trades) {
-  if (!account || !account.hasInactivity || account.status === 'challenge') return null;
+  if (!account || !account.hasInactivity) return null;
   const minDays = Math.max(1, Math.round(Number(account.inactMinDays) || 1));
   const minNet = Number(account.inactMinNet) || 0;
   const windowDays = Math.max(1, Math.round(Number(account.inactWindow) || 1));
@@ -280,18 +274,6 @@ function isInactive(account, trades) {
   const info = inactivityInfo(account, trades);
   if (info) return info.remaining <= 0;
   return daysSince(account.lastTrade) >= 7;
-}
-
-// Challenge deadline = start date (+ duration days, inclusive) -> last day to pass the challenge.
-// start date falls back to opening date. remaining counted from real today.
-function challengeInfo(account) {
-  if (!account || account.status !== 'challenge') return null;
-  const start = account.startDate || account.opened;
-  if (!start || account.duration == null) return null;
-  const deadline = addDaysIso(start, Math.max(0, Math.round(Number(account.duration)) - 1));
-  const remaining = daysBetweenIso(todayIso(), deadline);
-  const color = remaining > 15 ? 'profit' : remaining > 5 ? 'warn' : 'loss';
-  return { start, deadline, remaining, color, expired: remaining < 0 };
 }
 
 function accountTradePnl(account, trades) {
@@ -396,9 +378,8 @@ const DEMO_ACCOUNTS = [
     status: 'funded', instrument: 'MES', color: '#1f8a5b', eod: 2000, opened: '2026-05-01', lastTrade: '2026-06-26',
     ddType: 'trailing', ddAmount: 2500, ddStop: 52500,
     hasInactivity: true, inactMinDays: 2, inactMinNet: 50, inactWindow: 30 },
-  { id: 'demo_c', name: 'Challenge — Démo', firm: 'Lucid', size: 25000, role: 'slave', coef: 1,
-    status: 'challenge', instrument: 'ES', color: '#b9802a', eod: 1000, opened: '2026-06-12',
-    target: 1500, startDate: '2026-06-12', duration: 30 },
+  { id: 'demo_c', name: 'Compte 3 — Démo', firm: 'Lucid', size: 25000, role: 'slave', coef: 1,
+    status: 'funded', instrument: 'ES', color: '#b9802a', eod: 1000, opened: '2026-06-12' },
 ];
 
 function demoLegs(ids, contracts, gross) {
@@ -429,5 +410,5 @@ Object.assign(window, {
   DEMO_ACCOUNTS, DEMO_TRADES,
   FEE, REPLAY_ACCOUNT_ID, REPLAY_ACCOUNT, ACCOUNTS, TRADES, INSTRUMENTS, MINDSET_LABEL, buildLegs, refLeg, computeRefAccountId,
   fmtMoney, fmtNum, fmtPct, fmtDateFR, tradePnl, tradeGross, tradeFees, tradeContracts,
-  tradesForScope, computeStats, dailyPnl, equityCurve, tradesInRange, periodRange, PERIOD_LABEL, daysSince, todayDate, todayIso, addDaysIso, daysBetweenIso, inactivityInfo, isInactive, challengeInfo, drawdownInfo, accountBalance, peakEquity, accountTradePnl, payoutInfo, isoDate,
+  tradesForScope, computeStats, dailyPnl, equityCurve, tradesInRange, periodRange, PERIOD_LABEL, daysSince, todayDate, todayIso, addDaysIso, daysBetweenIso, inactivityInfo, isInactive, drawdownInfo, accountBalance, peakEquity, accountTradePnl, payoutInfo, isoDate,
 });

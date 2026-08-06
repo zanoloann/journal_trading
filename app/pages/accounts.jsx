@@ -2,11 +2,8 @@
 function Accounts() {
   const ctx = React.useContext(window.AppCtx);
   const master = ctx.accounts.find(a => a.role === 'master');
-  const funded = ctx.accounts.filter(a => a.role !== 'master' && a.status === 'funded');
-  const challenges = ctx.accounts.filter(a => a.role !== 'master' && a.status === 'challenge');
-
-  // Capital / équité excluent les comptes en challenge (seuls les comptes financés comptent)
-  const fundedAll = ctx.accounts.filter(a => a.status !== 'challenge');
+  const funded = ctx.accounts.filter(a => a.role !== 'master');
+  const fundedAll = ctx.accounts;
   const totalCapital = fundedAll.reduce((s, a) => s + a.size, 0);
   const totalBal = fundedAll.reduce((s, a) => s + window.accountBalance(a, ctx.trades), 0);
   const inactiveN = ctx.accounts.filter(a => window.isInactive(a, ctx.trades)).length;
@@ -158,104 +155,6 @@ function Accounts() {
   );
 }
 
-function ChallengeRow({ a }) {
-    const bal = window.accountBalance(a, ctx.trades);
-    const gain = bal - a.size;
-    const target = a.target || 3000;
-    const prog = Math.max(0, Math.min(1, gain / target));
-    const since = window.daysSince(a.lastTrade);
-    const inact = window.inactivityInfo(a, ctx.trades);
-    const inactive = window.isInactive(a, ctx.trades);
-    const chal = window.challengeInfo(a);
-    const dd = window.drawdownInfo(a, ctx.trades);
-    const daysLeft = chal ? chal.remaining : null;
-    const active = ctx.scope === a.id;
-    const busted = dd && dd.margin <= 0;
-    const missed = !busted && prog < 1 && chal && chal.expired;
-    const failed = busted || missed;
-    const nearObjective = !failed && prog < 1 && prog >= 0.7;
-    return (
-      <div onClick={() => ctx.setScope(a.id)} className="tj-row"
-        style={{ borderRadius: 14, cursor: 'pointer', padding: '16px 18px',
-          background: active ? 'var(--surface-2)' : 'var(--surface)',
-          border: '1px solid ' + (active ? 'var(--ink)' : inactive ? 'var(--warn)' : 'var(--border)') }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '2.2fr 1fr 1fr 1fr 1.1fr auto', gap: 14, alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: a.color, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', flexShrink: 0 }}>
-              <window.Icon name="target" size={17} />
-            </div>
-            <div style={{ minWidth: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
-                <span style={{ fontWeight: 700, fontSize: 14.5, whiteSpace: 'nowrap' }}>{a.name}</span>
-                <window.Badge tone="warn" style={{ fontSize: 10 }}>Challenge ×{a.coef}</window.Badge>
-              </div>
-              <div style={{ fontSize: 12, color: 'var(--ink-3)', marginTop: 2 }}>{a.firm} · {window.fmtMoney(a.size, { signed: false })}</div>
-            </div>
-          </div>
-          <div>
-            <div style={{ fontSize: 11, color: 'var(--ink-3)' }}>Solde actuel</div>
-            <div style={{ fontWeight: 700, fontSize: 14, fontFamily: 'var(--font-display)', fontVariantNumeric: 'tabular-nums' }}>{window.fmtMoney(bal, { signed: false })}</div>
-          </div>
-          <div>
-            <div style={{ fontSize: 11, color: 'var(--ink-3)' }}>{a.ddType === 'trailing' ? 'DD suiveur' : a.ddType === 'static' ? 'DD statique' : 'Drawdown'}</div>
-            <div style={{ fontWeight: 600, fontSize: 13.5, color: (a.ddType && a.ddType !== 'none') ? 'var(--loss)' : 'var(--ink-3)' }}>{(a.ddType && a.ddType !== 'none') ? '−' + window.fmtMoney(a.ddAmount || 0, { signed: false }) : '—'}</div>
-          </div>
-          <div>
-            <div style={{ fontSize: 11, color: 'var(--ink-3)' }}>Jours restants</div>
-            <div style={{ fontWeight: 700, fontSize: 14, color: chal ? (chal.color === 'profit' ? 'var(--ink)' : chal.color === 'warn' ? 'var(--warn)' : 'var(--loss)') : 'var(--ink-3)' }}>{daysLeft != null ? (daysLeft >= 0 ? daysLeft + ' j' : 'expiré') : 'illimité'}</div>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: inact ? (inact.color === 'profit' ? 'var(--profit)' : inact.color === 'warn' ? 'var(--warn)' : 'var(--loss)') : 'var(--ink-3)' }}>
-            {inact ? (<>
-              <window.Icon name="calendar" size={14} />
-              <span style={{ fontSize: 12.5, fontWeight: 700 }}>{window.fmtDateFR(inact.deadline) + ' · ' + (inact.remaining > 0 ? inact.remaining + ' j' : 'inactif')}</span>
-            </>) : (
-              <span style={{ fontSize: 12.5, color: 'var(--ink-3)' }}>—</span>
-            )}
-          </div>
-        {actionsFor(a)}
-        </div>
-        <MllTargetBar a={a} start={a.size} current={bal} mll={dd ? dd.threshold : (a.size - (Number(a.ddAmount) || 0))} target={a.size + target} />
-        {prog >= 1 && (
-          <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', padding: '10px 14px', borderRadius: 11, background: 'var(--profit-bg)' }}>
-            <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--profit)', display: 'flex', alignItems: 'center', gap: 7 }}>
-              <window.Icon name="check" size={16} /> Objectif atteint — ce challenge est réussi !
-            </span>
-            <window.Button size="sm" variant="profit" icon="check" onClick={() => ctx.confirm({
-              title: 'Valider ce challenge ?',
-              message: '« ' + a.name + ' » passera en compte financé. Le solde et les trades existants sont conservés.',
-              confirmLabel: 'Valider le challenge', danger: false,
-              onConfirm: () => ctx.validateChallenge(a.id),
-            })}>Valider Challenge</window.Button>
-          </div>
-        )}
-        {nearObjective && (
-          <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderRadius: 11, background: 'var(--info-bg)' }}>
-            <window.Icon name="target" size={15} style={{ color: 'var(--info)' }} />
-            <span style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--info)' }}>Objectif proche — {window.fmtMoney(target - gain, { signed: false })} restants.</span>
-          </div>
-        )}
-
-        {failed && (
-          <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', padding: '10px 14px', borderRadius: 11, background: 'var(--loss-bg)' }}>
-            <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--loss)', display: 'flex', alignItems: 'center', gap: 7 }}>
-              <window.Icon name="alert" size={16} /> {busted ? 'Drawdown maximum atteint — challenge échoué.' : 'Délai expiré sans atteindre l’objectif — challenge échoué.'}
-            </span>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <window.Button size="sm" variant="secondary" onClick={() => ctx.confirm({
-                title: 'Réinitialiser « ' + a.name + ' » ?', message: 'Les trades de ce compte seront effacés et le challenge repartira à zéro à partir d’aujourd’hui.',
-                confirmLabel: 'Réinitialiser', onConfirm: () => ctx.resetAccount(a.id),
-              })}>Réinitialiser</window.Button>
-              <window.Button size="sm" variant="secondary" onClick={() => ctx.confirm({
-                title: 'Archiver « ' + a.name + ' » ?', message: 'Le compte sera masqué de la liste et des sélecteurs. Ses données sont conservées et il peut être désarchivé plus tard.',
-                confirmLabel: 'Archiver', onConfirm: () => ctx.archiveAccount(a.id, true),
-              })}>Archiver</window.Button>
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  }
-
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       {ctx.accounts.length === 0 && (
@@ -309,19 +208,6 @@ function ChallengeRow({ a }) {
         {funded.map(a => <AccountRow key={a.id} a={a} />)}
         {funded.length === 0 && master && <div style={{ fontSize: 13, color: 'var(--ink-3)', padding: '4px 2px' }}>Aucun compte financé esclave.</div>}
       </div>
-
-      {/* challenges at the bottom */}
-      {challenges.length > 0 && (
-        <>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 6 }}>
-            <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>Comptes en challenge</h3>
-            <window.Badge tone="warn">{challenges.length}</window.Badge>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {challenges.map(a => <ChallengeRow key={a.id} a={a} />)}
-          </div>
-        </>
-      )}
 
       {/* fictitious replay/training account — always last, never counted in capital/equity/stats above */}
       <ReplayCard />
@@ -387,7 +273,7 @@ function ArchivedSection() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
               <window.AccountDot color={a.color} />
               <span style={{ fontWeight: 600, fontSize: 13.5 }}>{a.name}</span>
-              <span style={{ fontSize: 12, color: 'var(--ink-3)' }}>{a.firm}{a.status === 'challenge' ? ' · Challenge' : ''}</span>
+              <span style={{ fontSize: 12, color: 'var(--ink-3)' }}>{a.firm}</span>
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
               <window.Button size="sm" variant="secondary" onClick={() => ctx.archiveAccount(a.id, false)}>Désarchiver</window.Button>

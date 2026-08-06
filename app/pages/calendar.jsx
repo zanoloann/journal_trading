@@ -64,13 +64,6 @@ function PerfCalendar({ scope, onPickDay, ym: ymProp, setYm: setYmProp }) {
     if (info && info.deadline) (deadlines[info.deadline] = deadlines[info.deadline] || []).push(a);
   });
 
-  // challenge end dates (last day to pass the challenge) — red highlight
-  const challengeEnds = {};
-  ctx.accounts.forEach(a => {
-    const ci = window.challengeInfo(a);
-    if (ci && ci.deadline) (challengeEnds[ci.deadline] = challengeEnds[ci.deadline] || []).push(a);
-  });
-
   // No-trade days (grey)
   const noTradeById = {};
   ctx.trades.filter(t => t.noTrade).forEach(t => { noTradeById[t.date] = t; });
@@ -88,7 +81,7 @@ function PerfCalendar({ scope, onPickDay, ym: ymProp, setYm: setYmProp }) {
   // qualifying days for the inactivity rule (daily net >= threshold), per account, filtered by scope
   const qualifyingDays = {};
   ctx.accounts.forEach(a => {
-    if (!a.hasInactivity || a.status === 'challenge') return;
+    if (!a.hasInactivity) return;
     if (scope !== 'all' && scope !== 'ref' && a.id !== scope) return;
     const minNet = Number(a.inactMinNet) || 0;
     const d = window.dailyPnl(ctx.trades, a.id);
@@ -134,10 +127,6 @@ function PerfCalendar({ scope, onPickDay, ym: ymProp, setYm: setYmProp }) {
             Date limite d'inactivité
           </span>
           <span style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--ink-3)', fontSize: 12 }}>
-            <span style={{ width: 13, height: 13, borderRadius: 4, border: '2.5px solid var(--loss)', background: 'var(--loss-bg)', display: 'inline-block' }} />
-            Fin de challenge
-          </span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--ink-3)', fontSize: 12 }}>
             <span style={{ width: 13, height: 13, borderRadius: 4, boxShadow: 'inset 0 0 0 2.5px var(--gold)', background: 'var(--surface-2)', display: 'inline-block' }} />
             Journée qualifiante
           </span>
@@ -161,12 +150,11 @@ function PerfCalendar({ scope, onPickDay, ym: ymProp, setYm: setYmProp }) {
                 const weekend = dow === 0 || dow === 6;
                 const day = daily[iso];
                 const dl = deadlines[iso];
-                const ce = challengeEnds[iso];
-                const nt = noTradeById[iso];
+                                const nt = noTradeById[iso];
                 const rp = replayById[iso];
                 const future = dt > today;
                 if (weekend) {
-                  const mk = dl ? { b: 'var(--gold)', bg: 'var(--gold-bg)', ink: 'var(--gold-ink)', list: dl } : ce ? { b: 'var(--loss)', bg: 'var(--loss-bg)', ink: 'var(--loss)', list: ce } : null;
+                  const mk = dl ? { b: 'var(--gold)', bg: 'var(--gold-bg)', ink: 'var(--gold-ink)', list: dl } : null;
                   const exceptional = day || nt; // trade(s) exceptionnellement enregistrés un week-end — non bloqué à la saisie, signalé ici
                   function onWeekendClick() {
                     if (nt) {
@@ -198,7 +186,7 @@ function PerfCalendar({ scope, onPickDay, ym: ymProp, setYm: setYmProp }) {
                       {!exceptional && mk && (
                         <span style={{ display: 'flex', flexDirection: 'column', gap: 2, overflow: 'hidden' }}>
                           {mk.list.map(a => (
-                            <span key={a.id} title={a.name + (mk.ink === 'var(--loss)' ? ' — fin du challenge' : '')} style={{ fontSize: 9.5, fontWeight: 700, color: mk.ink, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'flex', alignItems: 'center', gap: 3 }}>
+                            <span key={a.id} title={a.name} style={{ fontSize: 9.5, fontWeight: 700, color: mk.ink, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'flex', alignItems: 'center', gap: 3 }}>
                               <span style={{ width: 6, height: 6, borderRadius: 99, background: a.color, flexShrink: 0, display: 'inline-block' }} />{a.name}
                             </span>
                           ))}
@@ -214,8 +202,8 @@ function PerfCalendar({ scope, onPickDay, ym: ymProp, setYm: setYmProp }) {
                 }
                 const { bg, fg } = day ? pnlBg(day.pnl)
                   : nt ? { bg: 'var(--surface-2)', fg: 'var(--ink-3)' }
-                  : { bg: (dl ? 'var(--gold-bg)' : ce ? 'var(--loss-bg)' : 'transparent'), fg: 'var(--ink-2)' };
-                const mk = dl ? { b: 'var(--gold)', ink: 'var(--gold-ink)', list: dl, ch: false } : ce ? { b: 'var(--loss)', ink: 'var(--loss)', list: ce, ch: true } : null;
+                  : { bg: (dl ? 'var(--gold-bg)' : 'transparent'), fg: 'var(--ink-2)' };
+                const mk = dl ? { b: 'var(--gold)', ink: 'var(--gold-ink)', list: dl } : null;
                 const qd = day && qualifyingDays[iso];
                 function onClick() {
                   if (nt) {
@@ -231,7 +219,7 @@ function PerfCalendar({ scope, onPickDay, ym: ymProp, setYm: setYmProp }) {
                       aspectRatio: '1', borderRadius: 11,
                       border: mk ? '2.5px solid ' + mk.b : '1px solid ' + ((day || nt) ? 'transparent' : 'var(--border)'),
                       boxShadow: qd && !mk ? 'inset 0 0 0 2.5px var(--gold)' : 'none',
-                      background: day ? bg : (nt ? 'var(--surface-2)' : (dl ? 'var(--gold-bg)' : ce ? 'var(--loss-bg)' : (future ? 'transparent' : 'var(--surface)'))),
+                      background: day ? bg : (nt ? 'var(--surface-2)' : (dl ? 'var(--gold-bg)' : (future ? 'transparent' : 'var(--surface)'))),
                       color: fg, padding: 7, textAlign: 'left', cursor: (day || nt) ? 'pointer' : 'default',
                       display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
                       opacity: (future && !mk && !nt) ? 0.35 : 1,
@@ -246,7 +234,7 @@ function PerfCalendar({ scope, onPickDay, ym: ymProp, setYm: setYmProp }) {
                       </span>}
                       {nt && <span style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.03em', alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', gap: 3, color: day ? '#fff' : 'var(--ink-3)', background: day ? 'rgba(255,255,255,.24)' : 'transparent', borderRadius: 5, padding: day ? '1px 5px' : 0 }}>No trade ✕</span>}
                       {mk && !day && !nt && mk.list.map(a => (
-                        <span key={a.id} title={a.name + (mk.ch ? ' — fin du challenge' : '')} style={{ fontSize: 9.5, fontWeight: 700, color: mk.ink, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'flex', alignItems: 'center', gap: 3 }}>
+                        <span key={a.id} title={a.name} style={{ fontSize: 9.5, fontWeight: 700, color: mk.ink, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'flex', alignItems: 'center', gap: 3 }}>
                           <span style={{ width: 6, height: 6, borderRadius: 99, background: a.color, flexShrink: 0, display: 'inline-block' }} />{a.name}
                         </span>
                       ))}

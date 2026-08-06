@@ -19,7 +19,7 @@ function AddTradeModal({ onClose, tradeId }) {
     const init = {};
     ctx.accounts.forEach(a => {
       const leg = existing && existing.accounts.find(l => l.accountId === a.id);
-      init[a.id] = { on: existing ? !!leg : (a.status !== 'challenge'), coef: leg ? leg.coef : a.coef };
+      init[a.id] = { on: existing ? !!leg : true, coef: leg ? leg.coef : a.coef };
     });
     return init;
   });
@@ -56,7 +56,7 @@ function AddTradeModal({ onClose, tradeId }) {
         </div>
       )}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-        <Field label="Instrument" hint={f.symbol === 'ES' ? 'E-mini S&P — comptes challenge' : 'Micro E-mini S&P — quotidien'}>
+        <Field label="Instrument" hint={f.symbol === 'ES' ? 'E-mini S&P' : 'Micro E-mini S&P'}>
           <window.Segmented value={f.symbol} onChange={v => set('symbol', v)} options={[{ value: 'MES', label: 'MES' }, { value: 'ES', label: 'ES' }]} />
         </Field>
         <Field label="Date"><input type="date" style={inputStyle} value={f.date} onChange={e => set('date', e.target.value)} /></Field>
@@ -84,18 +84,15 @@ function AddTradeModal({ onClose, tradeId }) {
           Cochez les comptes sur lesquels appliquer ce trade et ajustez leur coefficient.
         </p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {ctx.accounts.slice().sort((x, y) => (x.status === 'challenge' ? 1 : 0) - (y.status === 'challenge' ? 1 : 0)).map((a, idx, arr) => {
+          {ctx.accounts.map((a) => {
             const isMaster = a.role === 'master';
             const ap = applied[a.id];
             const on = ap.on;
-            const firstChallenge = a.status === 'challenge' && (idx === 0 || arr[idx - 1].status !== 'challenge');
             const coef = isMaster ? 1 : Number(ap.coef) || 0;
             const cAcc = isMaster ? contractsBase : Math.max(1, Math.round(contractsBase * coef));
             const net = on ? +(grossBase * coef).toFixed(2) - window.accountFee(a, f.symbol) * cAcc : 0;
             return (
-              <React.Fragment key={a.id}>
-              {firstChallenge && <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '6px 2px 2px', fontSize: 11, fontWeight: 700, color: 'var(--ink-3)', textTransform: 'uppercase', letterSpacing: '.04em' }}><window.Icon name="target" size={12} /> Comptes en challenge</div>}
-              <div style={{ display: 'grid', gridTemplateColumns: '28px 1fr auto auto', gap: 12, alignItems: 'center', padding: '10px 14px', borderRadius: 11, border: '1px solid ' + (on ? 'var(--ink)' : 'var(--border)'), background: on ? 'var(--surface)' : 'var(--surface-2)', opacity: on ? 1 : .65 }}>
+              <div key={a.id} style={{ display: 'grid', gridTemplateColumns: '28px 1fr auto auto', gap: 12, alignItems: 'center', padding: '10px 14px', borderRadius: 11, border: '1px solid ' + (on ? 'var(--ink)' : 'var(--border)'), background: on ? 'var(--surface)' : 'var(--surface-2)', opacity: on ? 1 : .65 }}>
                 <button onClick={() => setApplied(p => ({ ...p, [a.id]: { ...p[a.id], on: !p[a.id].on } }))}
                   style={{ width: 22, height: 22, borderRadius: 7, border: '1.5px solid ' + (on ? 'var(--ink)' : 'var(--border-strong)'), background: on ? 'var(--ink)' : 'transparent', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
                   {on && <window.Icon name="check" size={14} stroke={3} />}
@@ -114,7 +111,6 @@ function AddTradeModal({ onClose, tradeId }) {
                 </div>
                 <window.PnL value={+net.toFixed(2)} style={{ fontWeight: 700, fontSize: 13.5, minWidth: 72, textAlign: 'right' }} />
               </div>
-              </React.Fragment>
             );
           })}
         </div>

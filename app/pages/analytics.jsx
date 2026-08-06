@@ -23,12 +23,8 @@ function HBarRow({ label, value, max, count, color }) {
 
 function Analytics() {
   const ctx = React.useContext(window.AppCtx);
-  const [bucket, setBucket] = React.useState('funded');
   const [openNeg, setOpenNeg] = React.useState(false);
-  const fundedAccts = ctx.accounts.filter(a => a.status !== 'challenge');
-  const challengeAccts = ctx.accounts.filter(a => a.status === 'challenge');
-  const pool = bucket === 'challenge' ? challengeAccts : fundedAccts;
-  const poolIds = pool.map(a => a.id);
+  const poolIds = ctx.accounts.map(a => a.id);
   // keep only the reference leg (smallest coefficient, normally 1) of each session
   const sampleTrades = ctx.periodTrades.map(t => {
     if (t.noTrade || !t.accounts) return null;
@@ -101,13 +97,10 @@ function Analytics() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
         <div style={{ display: 'inline-flex', background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 10, padding: 3 }}>
-          {[['funded', 'Comptes financés'], ['challenge', 'Challenges']].map(([v, lbl]) => (
-            <button key={v} onClick={() => setBucket(v)} style={{ border: 'none', cursor: 'pointer', borderRadius: 8, padding: '7px 16px', fontSize: 13, fontWeight: 600, fontFamily: 'inherit', background: bucket === v ? 'var(--surface)' : 'transparent', color: bucket === v ? 'var(--ink)' : 'var(--ink-2)', boxShadow: bucket === v ? '0 1px 3px rgba(20,20,18,.12)' : 'none' }}>{lbl}</button>
-          ))}
-        </div>
+                  </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <span style={{ fontSize: 12.5, color: 'var(--ink-3)' }}>
-            {sampleTrades.length ? 'Résultats de référence (coefficient 1 de chaque séance) · ' + sampleTrades.length + ' séances' : 'Aucune séance dans cette catégorie'}
+            {sampleTrades.length ? 'Résultats de référence · ' + sampleTrades.length + ' séances' : 'Aucune séance disponible'}
           </span>
         </div>
       </div>
