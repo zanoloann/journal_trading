@@ -52,5 +52,33 @@ async function ghSyncAll(cfg, accounts, trades) {
     await ghPutFile(cfg.token, cfg.owner, cfg.repo, f.name, f.content, 'Sync journal — ' + new Date().toISOString());
   }
 }
+function b64DecodeUtf8(b64) { return decodeURIComponent(escape(atob(b64.replace(/\n/g, '')))); }
+async function ghGetFile(token, owner, repo, path) {
+  const res = await fetch('https://api.github.com/repos/' + owner + '/' + repo + '/contents/' + path, { headers: ghHeaders(token) });
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error('read-' + path);
+  const j = await res.json();
+  return b64DecodeUtf8(j.content);
+}
+async function ghListDir(token, owner, repo, path) {
+  const res = await fetch('https://api.github.com/repos/' + owner + '/' + repo + '/contents/' + path, { headers: ghHeaders(token) });
+  if (res.status === 404) return [];
+  if (!res.ok) throw new Error('list-' + path);
+  return res.json();
+}
+// Pull data/accounts.json + all data/trades/*.ndjson from the repo, rebuild the in-app shape.
+async function ghPullAll(cfg) {
+  const accJson = await ghGetFile(cfg.token, cfg.owner, cfg.repo, 'data/accounts.json');
+  if (accJson === null) throw new Error('no-data');
+  const accounts = JSON.parse(accJson);
+  const entries = await ghListDir(cfg.token, cfg.owner, cfg.repo, 'data/trades');
+  const trades = [];
+  for (const entry of entries.filter(e => e.name.endsWith('.ndjson'))) {
+    const content = await ghGetFile(cfg.token, cfg.owner, cfg.repo, 'data/trades/' + entry.name);
+    if (!content) continue;
+    content.split('\n').forEach(line => { const t = line.trim(); if (t) trades.push(JSON.parse(t)); });
+  }
+  return { accounts, trades };
+}
 
-Object.assign(window, { ghLoadCfg, ghSaveCfg, ghSyncAll });
+Object.assign(window, { ghLoadCfg, ghSaveCfg, ghSyncAll, ghPullAll });

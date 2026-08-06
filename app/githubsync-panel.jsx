@@ -33,6 +33,19 @@ function GithubSyncPanel() {
     catch (e) { setError('Échec de la synchro (' + e.message + ').'); }
     setBusy(false);
   }
+  async function doPullNow() {
+    setError(null); setBusy(true);
+    try {
+      const { accounts, trades } = await window.ghPullAll(cfg);
+      ctx.confirm({
+        title: 'Charger les données depuis GitHub ?',
+        message: 'Vos données actuelles sur cet appareil seront remplacées par celles du repo (' + accounts.length + ' comptes · ' + trades.length + ' trades).',
+        confirmLabel: 'Charger', danger: true,
+        onConfirm: () => { ctx.restoreBackup(accounts, trades); ctx.nav('dashboard'); },
+      });
+    } catch (e) { setError(e.message === 'no-data' ? 'Aucune donnée trouvée dans ce repo.' : ('Échec du chargement (' + e.message + ').')); }
+    setBusy(false);
+  }
   function doDisconnect() { setCfg({ connected: false }); }
 
   const fmtTime = (iso) => { if (!iso) return '—'; try { return new Date(iso).toLocaleString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }); } catch (e) { return '—'; } };
@@ -78,6 +91,7 @@ function GithubSyncPanel() {
           </label>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <window.Button variant="secondary" size="sm" icon="arrowUp" disabled={busy} onClick={doSyncNow}>Synchroniser maintenant</window.Button>
+            <window.Button variant="secondary" size="sm" icon="arrowDown" disabled={busy} onClick={doPullNow}>Charger depuis GitHub</window.Button>
             <window.Button variant="ghost" size="sm" onClick={doDisconnect} style={{ color: 'var(--loss)', marginLeft: 'auto' }}>Délier</window.Button>
           </div>
         </>
