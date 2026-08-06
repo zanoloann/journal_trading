@@ -95,7 +95,7 @@ function ScopeSelector() {
               return (
               <React.Fragment key={a.id}>
               {firstChallenge && <div style={{ display: 'flex', alignItems: 'center', gap: 6, margin: '6px 8px 3px', fontSize: 10.5, fontWeight: 700, color: 'var(--ink-3)', textTransform: 'uppercase', letterSpacing: '.04em' }}><window.Icon name="target" size={11} /> Challenges</div>}
-              <button className="tj-scopeitem" onClick={() => {ctx.setScope(a.id); if (a.status === 'challenge') ctx.setChalMode('with'); setOpen(false);}}>
+              <button className="tj-scopeitem" onClick={() => {ctx.setScope(a.id); setOpen(false);}}>
                 <window.AccountDot color={a.color} />
                 <span style={{ fontWeight: 600 }}>{a.name}</span>
                 {ctx.scope === a.id && <window.Icon name="check" size={15} style={{ marginLeft: 'auto', color: 'var(--profit)' }} />}
@@ -202,7 +202,6 @@ function App() {
   const [modal, setModal] = useStateApp(null); // {type:'trade'|'detail'|'account', id}
   const [confirm, setConfirm] = useStateApp(null); // {title, message, confirmLabel, onConfirm}
   const [period, setPeriod] = useStateApp({ preset: 'month', from: null, to: null });
-  const [chalMode, setChalMode] = useStateApp('without'); // 'without' | 'with' challenge accounts (dashboard/journal/calendar)
   const [showReplay, setShowReplay] = useStateApp(false); // toggle: compare with the "Replay" training sessions
   const [journalDateFilter, setJournalDateFilter] = useStateApp(null); // ISO date, set when a calendar cell is clicked
   const [sync, setSync] = useStateApp({ supported: window.FileSync.supported, connected: false, name: '', lastSync: null, busy: false, error: null, autoOn: true });
@@ -249,21 +248,11 @@ function App() {
   }, []);
 
   const range = period.preset === 'custom' ? { from: period.from, to: period.to } : window.periodRange(period.preset);
-  const chalIds = accounts.filter((a) => a.status === 'challenge').map((a) => a.id);
-  const hideChal = chalMode === 'without' && chalIds.length > 0;
-  function stripChal(list) {
-    if (!hideChal) return list;
-    return list.map((t) => {
-      if (t.noTrade || !t.accounts) return t;
-      const legs = t.accounts.filter((l) => !chalIds.includes(l.accountId));
-      return legs.length === t.accounts.length ? t : { ...t, accounts: legs };
-    }).filter((t) => t.noTrade || (t.accounts && t.accounts.length));
-  }
   const periodTrades = window.tradesInRange(trades, range.from, range.to);
-  const viewTrades = stripChal(periodTrades);
+  const viewTrades = periodTrades;
   const liveAccounts = accounts.filter((a) => !a.archived);
-  const accountsView = hideChal ? liveAccounts.filter((a) => a.status !== 'challenge') : liveAccounts;
-  const effScope = (hideChal && chalIds.includes(scope)) ? 'all' : scope;
+  const accountsView = liveAccounts;
+  const effScope = scope;
 
   function buildPayload() {
     return { app: 'trading-journal', version: 1, exportedAt: new Date().toISOString(), accounts, trades };
@@ -388,8 +377,8 @@ function App() {
   }, []);
 
   const ctx = {
-    t, route, scope: effScope, trades, accounts: liveAccounts, allAccounts: accounts, accountsView, chalMode, showReplay, journalDateFilter, period, range, viewTrades, periodTrades,
-    nav: setRoute, setScope, setPeriod, setChalMode, setShowReplay, setJournalDateFilter,
+    t, route, scope: effScope, trades, accounts: liveAccounts, allAccounts: accounts, accountsView, showReplay, journalDateFilter, period, range, viewTrades, periodTrades,
+    nav: setRoute, setScope, setPeriod, setShowReplay, setJournalDateFilter,
     openTrade: (id) => setModal(id === 'new' ? { type: 'trade' } : { type: 'detail', id }),
     editTrade: (id) => setModal({ type: 'trade', id }),
     openAccount: (id) => setModal({ type: 'account', id }),
