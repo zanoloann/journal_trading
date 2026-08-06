@@ -1,0 +1,53 @@
+[
+  {
+    "id": "acc_master",
+    "name": "Compte 1 — Maître",
+    "firm": "",
+    "size": 50000,
+    "role": "master",
+    "coef": 1,
+    "status": "funded",
+    "instrument": "MES+ES",
+    "color": "#1b1a17",
+    "eod": 2000,
+    "ddType": "trailing",
+    "ddAmount": 2000,
+    "ddStop": 52100,
+    "opened": "2026-03-11",
+    "lastTrade": "2026-06-09"
+  },
+  {
+    "id": "acc_2",
+    "name": "Compte 2",
+    "firm": "",
+    "size": 50000,
+    "role": "slave",
+    "coef": 1,
+    "status": "funded",
+    "instrument": "MES+ES",
+    "color": "#1f8a5b",
+    "eod": 2000,
+    "ddType": "trailing",
+    "ddAmount": 2000,
+    "ddStop": 52100,
+    "opened": "2026-03-11",
+    "lastTrade": "2026-06-09"
+  },
+  {
+    "id": "acc_3",
+    "name": "Compte 3",
+    "firm": "",
+    "size": 50000,
+    "role": "slave",
+    "coef": 1,
+    "status": "funded",
+    "instrument": "MES+ES",
+    "color": "#2a6fdb",
+    "eod": 2000,
+    "ddType": "trailing",
+    "ddAmount": 2000,
+    "ddStop": 52100,
+    "opened": "2026-03-11",
+    "lastTrade": "2026-06-09"
+  }
+]
