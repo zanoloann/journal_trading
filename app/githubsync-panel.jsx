@@ -14,7 +14,13 @@ function GithubSyncPanel() {
     try {
       const me = await ghWhoAmI(tokenInput);
       const repo = await ghGetRepo(tokenInput, me.login, repoName);
-      setCfg({ token: tokenInput, owner: me.login, repo: repo.name, connected: true, lastSync: null });
+      const next = { token: tokenInput, owner: me.login, repo: repo.name, connected: true, lastSync: null };
+      setCfg(next);
+      try {
+        const { accounts: ma, trades: mt } = await window.ghMergeAndSync(next, ctx.accounts, ctx.trades);
+        ctx.restoreBackup(ma, mt); // merge-safe: union of local + remote, never a deletion
+        setCfg({ ...next, lastSync: new Date().toISOString() });
+      } catch (e) {} // repo may be empty/unreachable on first connect — local data stays as-is
     } catch (e) { setError(e.message === 'auth' ? 'Token invalide ou expiré.' : e.message === 'not-found' ? 'Repo introuvable sous ce compte — vérifie le nom.' : (e.message || 'Échec de la connexion.')); }
     setBusy(false);
   }
@@ -29,20 +35,21 @@ function GithubSyncPanel() {
   }
   async function doSyncNow() {
     setError(null); setBusy(true);
-    try { await ghSyncAll(cfg, ctx.accounts, ctx.trades); setCfg({ lastSync: new Date().toISOString() }); }
+    try {
+      const { accounts: ma, trades: mt } = await window.ghMergeAndSync(cfg, ctx.accounts, ctx.trades);
+      setCfg({ lastSync: new Date().toISOString() });
+      if (ma.length !== ctx.accounts.length || mt.length !== ctx.trades.length) ctx.restoreBackup(ma, mt); // pick up additions synced from another device
+    }
     catch (e) { setError('Échec de la synchro (' + e.message + ').'); }
     setBusy(false);
   }
   async function doPullNow() {
     setError(null); setBusy(true);
     try {
-      const { accounts, trades } = await window.ghPullAll(cfg);
-      ctx.confirm({
-        title: 'Charger les données depuis GitHub ?',
-        message: 'Vos données actuelles sur cet appareil seront remplacées par celles du repo (' + accounts.length + ' comptes · ' + trades.length + ' trades).',
-        confirmLabel: 'Charger', danger: true,
-        onConfirm: () => { ctx.restoreBackup(accounts, trades); ctx.nav('dashboard'); },
-      });
+      const { accounts: ma, trades: mt } = await window.ghMergeAndSync(cfg, ctx.accounts, ctx.trades);
+      setCfg({ lastSync: new Date().toISOString() });
+      ctx.restoreBackup(ma, mt); // merge-safe: union with local, never deletes
+      ctx.nav('dashboard');
     } catch (e) { setError(e.message === 'no-data' ? 'Aucune donnée trouvée dans ce repo.' : ('Échec du chargement (' + e.message + ').')); }
     setBusy(false);
   }
@@ -91,7 +98,7 @@ function GithubSyncPanel() {
           </label>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <window.Button variant="secondary" size="sm" icon="arrowUp" disabled={busy} onClick={doSyncNow}>Synchroniser maintenant</window.Button>
-            <window.Button variant="secondary" size="sm" icon="arrowDown" disabled={busy} onClick={doPullNow}>Charger depuis GitHub</window.Button>
+            <window.Button variant="secondary" size="sm" icon="arrowDown" disabled={busy} onClick={doPullNow}>Récupérer les nouveautés</window.Button>
             <window.Button variant="ghost" size="sm" onClick={doDisconnect} style={{ color: 'var(--loss)', marginLeft: 'auto' }}>Délier</window.Button>
           </div>
         </>
@@ -100,4 +107,4 @@ function GithubSyncPanel() {
     </div>
   );
 }
-Object.assign(window, { ghLoadCfg, ghSaveCfg, ghSyncAll, GithubSyncPanel });
+Object.assign(window, { ghLoadCfg, ghSaveCfg, ghSyncAll, ghMergeAndSync, GithubSyncPanel });

@@ -303,7 +303,12 @@ function App() {
     const cfg = window.ghLoadCfg();
     if (!cfg.connected || !cfg.autoOn) return;
     if (ghDebounce.current) clearTimeout(ghDebounce.current);
-    ghDebounce.current = setTimeout(() => { window.ghSyncAll(cfg, accounts, trades).then(() => window.ghSaveCfg({ ...cfg, lastSync: new Date().toISOString() })).catch(() => {}); }, 4000);
+    ghDebounce.current = setTimeout(() => {
+      window.ghMergeAndSync(cfg, accounts, trades).then(({ accounts: ma, trades: mt }) => {
+        window.ghSaveCfg({ ...cfg, lastSync: new Date().toISOString() });
+        if (ma.length !== accounts.length || mt.length !== trades.length) { setAccounts(ma); setTrades(sortTradesDesc(ensureUniqueIds(mt))); } // pick up additions made on another device
+      }).catch(() => {});
+    }, 4000);
     return () => { if (ghDebounce.current) clearTimeout(ghDebounce.current); };
   }, [trades, accounts]);
 
@@ -331,6 +336,22 @@ function App() {
         window.idbSet('accounts', accounts);
       }
     })();
+  }, []);
+
+  // auto-pull from GitHub once per page load, whenever a device is connected — merge-safe: unions
+  // remote with local (never deletes), then mirrors the merged result back to GitHub, so opening the
+  // app on any device picks up whatever was added elsewhere without erasing local additions.
+  const ghAutoPullRef = useRefApp(false);
+  useEffectApp(() => {
+    if (ghAutoPullRef.current) return;
+    ghAutoPullRef.current = true;
+    const cfg = window.ghLoadCfg();
+    if (!cfg.connected) return;
+    window.ghMergeAndSync(cfg, accounts, trades).then(({ accounts: ma, trades: mt }) => {
+      setAccounts(ma);
+      setTrades(sortTradesDesc(ensureUniqueIds(mt)));
+      window.ghSaveCfg({ ...cfg, lastSync: new Date().toISOString() });
+    }).catch(() => {}); // stay on local data if unreachable (offline, token revoked, …)
   }, []);
 
   // one-time migration: recompute leg fees from each account's prop-firm fee (Lucid 1.00, Apex 1.04…),

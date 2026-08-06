@@ -51,8 +51,7 @@ async function ghSyncAll(cfg, accounts, trades) {
   for (const f of files) {
     await ghPutFile(cfg.token, cfg.owner, cfg.repo, f.name, f.content, 'Sync journal — ' + new Date().toISOString());
   }
-}
-function b64DecodeUtf8(b64) { return decodeURIComponent(escape(atob(b64.replace(/\n/g, '')))); }
+}function b64DecodeUtf8(b64) { return decodeURIComponent(escape(atob(b64.replace(/\n/g, '')))); }
 async function ghGetFile(token, owner, repo, path) {
   const res = await fetch('https://api.github.com/repos/' + owner + '/' + repo + '/contents/' + path, { headers: ghHeaders(token) });
   if (res.status === 404) return null;
@@ -81,4 +80,26 @@ async function ghPullAll(cfg) {
   return { accounts, trades };
 }
 
-Object.assign(window, { ghLoadCfg, ghSaveCfg, ghSyncAll, ghPullAll });
+// Merge-safe sync: never a blind overwrite in either direction. Pulls whatever is currently on
+// GitHub, unions it with the local data (by id — a trade or account present on either side survives;
+// on an id present on both sides the LOCAL version wins, since it's the one just edited), pushes the
+// merged result back, and returns it so the caller can also update local state. This is what lets two
+// devices add different trades independently without one push erasing the other's addition — the
+// trade-off (deliberate, per user request to never lose data) is that a trade deleted on one device
+// can reappear if another device still has it locally and syncs before pulling that deletion.
+function mergeById(remoteList, localList) {
+  const map = new Map();
+  (remoteList || []).forEach(item => { if (item && item.id) map.set(item.id, item); });
+  (localList || []).forEach(item => { if (item && item.id) map.set(item.id, item); }); // local overrides on shared id
+  return Array.from(map.values());
+}
+async function ghMergeAndSync(cfg, localAccounts, localTrades) {
+  let remote = { accounts: [], trades: [] };
+  try { remote = await ghPullAll(cfg); } catch (e) {} // repo empty / first sync — nothing to merge yet
+  const accounts = mergeById(remote.accounts, localAccounts);
+  const trades = mergeById(remote.trades, localTrades);
+  await ghSyncAll(cfg, accounts, trades);
+  return { accounts, trades };
+}
+
+Object.assign(window, { ghLoadCfg, ghSaveCfg, ghSyncAll, ghPullAll, ghMergeAndSync });

@@ -165,90 +165,17 @@ function BackupModal({ onClose }) {
         <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
           <div>
             <h2 style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 600 }}>Sauvegarde des données</h2>
-            <p style={{ margin: '4px 0 0', fontSize: 13.5, color: 'var(--ink-3)' }}>Synchronisez vers un fichier (Drive/Dropbox) pour retrouver vos données sur tous vos PC, ou exportez une sauvegarde ponctuelle.</p>
+            <p style={{ margin: '4px 0 0', fontSize: 13.5, color: 'var(--ink-3)' }}>Connectez GitHub pour retrouver vos données sur tous vos appareils, ou exportez une sauvegarde ponctuelle.</p>
           </div>
           <button className="tj-iconbtn" onClick={onClose}><window.Icon name="close" size={18} /></button>
         </div>
 
         <div style={{ padding: 24 }}>
-          {/* SYNC (Option 1: linked JSON file in a Drive/Dropbox folder) */}
+          {/* SYNC — GitHub (data/accounts.json + data/trades/AAAA-MM.ndjson) */}
           <window.GithubSyncPanel />
-          <div style={{ padding: 18, borderRadius: 14, border: '1px solid ' + (sync.connected ? 'var(--profit)' : 'var(--border)'), background: sync.connected ? 'color-mix(in oklab, var(--profit) 6%, var(--surface))' : 'var(--surface)', marginBottom: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-              <div style={{ width: 34, height: 34, borderRadius: 9, background: 'var(--info-bg)', color: 'var(--info)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><window.Icon name="link" size={17} /></div>
-              <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700 }}>Synchronisation automatique</h3>
-              {sync.connected && <window.Badge tone="profit" style={{ fontSize: 10, marginLeft: 'auto' }}>Activée</window.Badge>}
-            </div>
 
-            {sync.supported && window.FileSync.inIframe && !sync.connected && (
-              <div style={{ margin: '0 0 12px', padding: '10px 14px', borderRadius: 10, background: 'var(--warn-bg)', color: 'var(--warn)', fontSize: 12.5, lineHeight: 1.5, display: 'flex', gap: 8 }}>
-                <window.Icon name="alert" size={16} style={{ flexShrink: 0, marginTop: 1 }} />
-                <span>Vous êtes dans l'aperçu intégré. Pour activer la synchro, ouvrez d'abord l'app dans un <strong>onglet de navigateur séparé</strong> (Chrome/Edge/Brave), sinon le choix du fichier sera bloqué.</span>
-              </div>
-            )}
-            {!sync.supported ? (
-              <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--ink-2)', lineHeight: 1.5 }}>
-                Cette fonctionnalité nécessite <strong>Google Chrome, Microsoft Edge ou Brave</strong> sur ordinateur. Votre navigateur actuel ne la prend pas en charge — utilisez l'export / import manuel ci-dessous.
-              </p>
-            ) : !sync.connected ? (
-              <>
-                <p style={{ margin: '0 0 14px', fontSize: 13, color: 'var(--ink-2)', lineHeight: 1.5 }}>
-                  Liez un fichier <code style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>.json</code> placé dans votre dossier <strong>Drive / Dropbox / OneDrive</strong>. L'app y enregistre vos données <strong>automatiquement</strong> à chaque changement — accessibles ensuite sur vos autres PC (via le même fichier synchronisé).
-                </p>
-                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                  <window.Button variant="primary" icon="plus" onClick={() => ctx.syncConnectNew()} style={{ flex: 1, minWidth: 180 }}>Créer un fichier de synchro</window.Button>
-                  <window.Button variant="secondary" icon="link" onClick={doConnectExisting} style={{ flex: 1, minWidth: 180 }}>Lier un fichier existant</window.Button>
-                </div>
-              </>
-            ) : (
-              <>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', borderRadius: 10, background: 'var(--surface-2)', marginBottom: 12 }}>
-                  <window.Icon name="journal" size={15} style={{ color: 'var(--ink-3)' }} />
-                  <span style={{ fontSize: 13, fontWeight: 600, fontFamily: 'var(--font-mono)', wordBreak: 'break-all' }}>{sync.name}</span>
-                  <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--ink-3)', whiteSpace: 'nowrap' }}>
-                    {sync.busy ? 'envoi…' : (sync.lastSync ? 'synchro ' + fmtTime(sync.lastSync) : 'lié')}
-                  </span>
-                </div>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 9, cursor: 'pointer', marginBottom: 12 }}>
-                  <button type="button" onClick={() => ctx.setSyncAuto(!sync.autoOn)} style={{ width: 38, height: 22, borderRadius: 99, border: 'none', cursor: 'pointer', background: sync.autoOn ? 'var(--profit)' : 'var(--border-strong)', position: 'relative', transition: 'background .15s', flexShrink: 0 }}>
-                    <span style={{ position: 'absolute', top: 2, left: sync.autoOn ? 18 : 2, width: 18, height: 18, borderRadius: 99, background: '#fff', transition: 'left .15s' }} />
-                  </button>
-                  <span style={{ fontSize: 13, fontWeight: 600 }}>Envoi automatique à chaque modification</span>
-                </label>
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  <window.Button variant="secondary" size="sm" icon="arrowUp" onClick={() => ctx.syncPushNow()}>Envoyer maintenant</window.Button>
-                  <window.Button variant="secondary" size="sm" icon="arrowDown" onClick={doPull}>Charger depuis le fichier</window.Button>
-                  <window.Button variant="ghost" size="sm" onClick={() => ctx.syncDisconnect()} style={{ color: 'var(--loss)', marginLeft: 'auto' }}>Délier</window.Button>
-                </div>
-              </>
-            )}
-
-            {sync.error && (
-              <div style={{ marginTop: 12, padding: '10px 14px', borderRadius: 10, background: 'var(--loss-bg)', color: 'var(--loss)', fontSize: 12.5 }}>{syncErrMsg[sync.error] || 'Erreur de synchronisation.'}</div>
-            )}
-            {pulled && (
-              <div style={{ marginTop: 12, padding: '12px 14px', borderRadius: 10, background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
-                <div style={{ fontSize: 13, fontWeight: 600 }}>Fichier lu</div>
-                <div style={{ fontSize: 12.5, color: 'var(--ink-2)', marginTop: 3 }}>{pulled.accounts.length} comptes · {pulled.trades.length} trades{pulled.exportedAt ? ' · ' + fmtTime(pulled.exportedAt) : ''}</div>
-                <window.Button variant="danger" size="sm" icon="check" onClick={confirmPull} style={{ width: '100%', marginTop: 10 }}>Charger ces données dans l'app</window.Button>
-              </div>
-            )}
-          </div>
-
-          {/* EXPORT */}
-          <div style={{ padding: 18, borderRadius: 14, border: '1px solid var(--border)', background: 'var(--surface-2)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-              <div style={{ width: 34, height: 34, borderRadius: 9, background: 'var(--profit-bg)', color: 'var(--profit)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><window.Icon name="arrowDown" size={17} /></div>
-              <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700 }}>Exporter</h3>
-            </div>
-            <p style={{ margin: '0 0 14px', fontSize: 13, color: 'var(--ink-2)', lineHeight: 1.5 }}>
-              Télécharge un fichier <code style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>.json</code> contenant <strong>tous</strong> vos comptes ({ctx.accounts.length}) et trades ({ctx.trades.length}), avec coefficients, règles et ventilation par compte.
-            </p>
-            <window.Button variant="primary" icon="arrowDown" onClick={() => ctx.exportBackup()} style={{ width: '100%' }}>Télécharger ma sauvegarde</window.Button>
-          </div>
-
-          {/* NDJSON EXPORT — préfigure la future structure de repo (accounts.json + un fichier par mois) */}
-          <div style={{ padding: 18, borderRadius: 14, border: '1px solid var(--border)', marginTop: 16 }}>
+          {/* NDJSON EXPORT — même structure que la synchro GitHub, en téléchargement ponctuel */}
+          <div style={{ padding: 18, borderRadius: 14, border: '1px solid var(--border)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
               <div style={{ width: 34, height: 34, borderRadius: 9, background: 'var(--surface-2)', color: 'var(--ink-2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><window.Icon name="journal" size={17} /></div>
               <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700 }}>Export NDJSON <span style={{ fontWeight: 500, color: 'var(--ink-3)' }}>(structure repo)</span></h3>
@@ -271,9 +198,13 @@ function BackupModal({ onClose }) {
               <div style={{ width: 34, height: 34, borderRadius: 9, background: 'var(--info-bg)', color: 'var(--info)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><window.Icon name="arrowUp" size={17} /></div>
               <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700 }}>Importer / restaurer</h3>
             </div>
-            <p style={{ margin: '0 0 14px', fontSize: 13, color: 'var(--ink-2)', lineHeight: 1.5 }}>
-              Chargez une sauvegarde <code style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>.json</code> pour restaurer vos données (remplace les données actuelles).
+            <p style={{ margin: '0 0 10px', fontSize: 13, color: 'var(--ink-2)', lineHeight: 1.5 }}>
+              Chargez une sauvegarde <code style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>.json</code> pour restaurer vos données (remplace les données actuelles sur cet appareil).
             </p>
+            <div style={{ margin: '0 0 14px', padding: '10px 14px', borderRadius: 10, background: 'var(--warn-bg)', color: 'var(--warn)', fontSize: 12.5, lineHeight: 1.5, display: 'flex', gap: 8 }}>
+              <window.Icon name="alert" size={16} style={{ flexShrink: 0, marginTop: 1 }} />
+              <span>Si GitHub est connecté, la prochaine synchro écrasera <strong>tout</strong> le repo avec cette sauvegarde. Ne l'utilisez que si ce fichier est bien la version la plus récente.</span>
+            </div>
             <window.Button variant="secondary" icon="journal" onClick={() => fileRef.current.click()} style={{ width: '100%' }}>Choisir un fichier de sauvegarde</window.Button>
             <input ref={fileRef} type="file" accept="application/json,.json" onChange={onFile} style={{ display: 'none' }} />
 
@@ -292,7 +223,7 @@ function BackupModal({ onClose }) {
           </div>
 
           <p style={{ margin: '16px 2px 0', fontSize: 11.5, color: 'var(--ink-3)', lineHeight: 1.5 }}>
-            Astuce multi-PC : créez le fichier de synchro dans un dossier <strong>Drive / Dropbox</strong>. Sur un autre PC, ouvrez l'app puis « Lier un fichier existant » en pointant le même fichier synchronisé.
+            Multi-appareils : la synchro GitHub ci-dessus pousse et récupère automatiquement vos données à chaque ouverture et modification.
           </p>
         </div>
       </div>
