@@ -1,0 +1,7 @@
+{
+  "_comment": "Frais par contrat (round turn, en $) par prop firm et type de contrat. MES = Micro E-mini, ES = E-mini. Si un instrument n'est pas listé, l'app retombe sur la valeur MES.",
+  "firms": [
+    { "name": "Apex", "fees": { "MES": 1.04 } },
+    { "name": "Lucid", "fees": { "MES": 1.00 } }
+  ]
+}

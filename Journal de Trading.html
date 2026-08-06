@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Ledger — Journal de trading</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #f6f5f1;
+    --surface: #ffffff;
+    --surface-2: #f3f1ec;
+    --border: #e7e3da;
+    --border-strong: #d8d3c8;
+    --ink: #1b1a17;
+    --ink-2: #6d685e;
+    --ink-3: #a39d92;
+    --profit: #1f8a5b;
+    --profit-bg: #e6f3ec;
+    --loss: #d4504e;
+    --loss-bg: #fbecea;
+    --warn: #b9802a;
+    --warn-bg: #f8efdd;
+    --gold: #c79a16;
+    --gold-bg: #faf1cf;
+    --gold-ink: #8a6a08;
+    --info: #2a6fdb;
+    --info-bg: #eaf0fb;
+    --accent: #1f8a5b;
+    --font-display: "Space Grotesk", sans-serif;
+    --font-mono: "IBM Plex Mono", monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Manrope", -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    font-size: 15px;
+  }
+  h1, h2, h3, h4 { color: var(--ink); }
+  ::selection { background: color-mix(in oklab, var(--accent) 28%, transparent); }
+
+  .tj-iconbtn {
+    width: 34px; height: 34px; border-radius: 9px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--ink-2); display: inline-flex; align-items: center;
+    justify-content: center; cursor: pointer; transition: all .15s; flex-shrink: 0;
+  }
+  .tj-iconbtn:hover { background: var(--surface-2); color: var(--ink); border-color: var(--border-strong); }
+  .tj-del:hover { background: var(--loss-bg) !important; color: var(--loss) !important; border-color: var(--loss) !important; }
+
+  .tj-textbtn {
+    border: none; background: none; cursor: pointer; font-family: inherit; font-size: 13px;
+    font-weight: 600; color: var(--accent); padding: 2px 0; transition: opacity .15s;
+  }
+  .tj-textbtn:hover { opacity: .68; }
+
+  .tj-nav:hover { background: var(--surface-2) !important; color: var(--ink) !important; }
+  .tj-calcell:not(:disabled):hover { outline: 2px solid var(--ink); outline-offset: -1px; }
+  .tj-row:hover, .tj-tradeline:hover { background: var(--surface-2) !important; }
+  .tj-tradeline:last-child { border-bottom: none !important; }
+
+  .tj-select {
+    padding: 7px 12px; border: 1px solid var(--border); border-radius: 10px; font-size: 13px;
+    font-family: inherit; font-weight: 600; background: var(--surface-2); color: var(--ink); cursor: pointer;
+  }
+  select:focus-visible, input:focus-visible, textarea:focus-visible {
+    outline: none; border-color: var(--accent);
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 18%, transparent);
+  }
+
+  .tj-addslave {
+    display: inline-flex; align-items: center; gap: 6px; padding: 10px 14px; border-radius: 11px;
+    border: 1px dashed var(--border-strong); background: transparent; color: var(--ink-2);
+    font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; transition: all .15s;
+  }
+  .tj-addslave:hover { border-color: var(--ink); color: var(--ink); background: var(--surface); }
+
+  .tj-sidelink {
+    display: flex; align-items: center; justify-content: center; gap: 7px; width: 100%;
+    padding: 9px 12px; border-radius: 10px; border: 1px solid var(--border);
+    background: transparent; color: var(--ink-2); font-family: inherit; font-size: 13px;
+    font-weight: 600; cursor: pointer; transition: all .15s;
+  }
+  .tj-sidelink:hover { background: var(--surface-2); color: var(--ink); border-color: var(--border-strong); }
+
+  .tj-scope {
+    display: inline-flex; align-items: center; gap: 9px; padding: 8px 13px; border-radius: 10px;
+    border: 1px solid var(--border); background: var(--surface); color: var(--ink); cursor: pointer;
+    font-family: inherit; font-size: 13.5px; transition: all .15s;
+  }
+  .tj-scope:hover { border-color: var(--border-strong); background: var(--surface-2); }
+  .tj-scopeitem {
+    display: flex; align-items: center; gap: 10px; width: 100%; padding: 9px 11px; border-radius: 9px;
+    border: none; background: transparent; cursor: pointer; font-family: inherit; font-size: 13.5px;
+    color: var(--ink); text-align: left; transition: background .12s;
+  }
+  .tj-scopeitem:hover { background: var(--surface-2); }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 11px; height: 11px; }
+  ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 99px; border: 3px solid var(--bg); }
+  ::-webkit-scrollbar-track { background: transparent; }
+
+  @media (max-width: 720px) {
+    aside { display: none; }
+  }
+</style>
+</head>
+<body>
+<template id="__bundler_thumbnail">
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <rect width="100" height="100" fill="#1b1a17"/>
+  <polyline points="20,68 38,52 52,60 80,30" fill="none" stroke="#1f8a5b" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="80" cy="30" r="6" fill="#1f8a5b"/>
+</svg>
+</template>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="app/idb.jsx"></script>
+<script type="text/babel" src="app/data.jsx"></script>
+<script type="text/babel" src="app/propfirms.jsx"></script>
+<script type="text/babel" src="app/ui.jsx"></script>
+<script type="text/babel" src="app/calendar.jsx"></script>
+<script type="text/babel" src="app/dashboard.jsx"></script>
+<script type="text/babel" src="app/journal.jsx"></script>
+<script type="text/babel" src="app/analytics.jsx"></script>
+<script type="text/babel" src="app/accounts.jsx"></script>
+<script type="text/babel" src="app/payout.jsx"></script>
+<script type="text/babel" src="app/modals-shared.jsx"></script>
+<script type="text/babel" src="app/modals-trade.jsx"></script>
+<script type="text/babel" src="app/modals-session.jsx"></script>
+<script type="text/babel" src="app/modals-tradedetail.jsx"></script>
+<script type="text/babel" src="app/modals-account.jsx"></script>
+<script type="text/babel" src="app/modals-confirm.jsx"></script>
+<script type="text/babel" src="app/modals-settings.jsx"></script>
+<script type="text/babel" src="app/import.jsx"></script>
+<script type="text/babel" src="app/backup.jsx"></script>
+<script type="text/babel" src="app/githubsync-api.jsx"></script>
+<script type="text/babel" src="app/githubsync-panel.jsx"></script>
+<script type="text/babel" src="app/filesync.jsx"></script>
+<script type="text/babel" src="app/app.jsx"></script>
+</body>
+</html>
