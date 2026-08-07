@@ -14,7 +14,7 @@
     "ddAmount": 2000,
     "ddStop": 52100,
     "opened": "2026-03-11",
-    "lastTrade": "2026-06-09"
+    "lastTrade": "2026-08-04"
   },
   {
     "id": "acc_2",
@@ -31,7 +31,7 @@
     "ddAmount": 2000,
     "ddStop": 52100,
     "opened": "2026-03-11",
-    "lastTrade": "2026-06-09"
+    "lastTrade": "2026-08-04"
   },
   {
     "id": "acc_3",
@@ -48,6 +48,6 @@
     "ddAmount": 2000,
     "ddStop": 52100,
     "opened": "2026-03-11",
-    "lastTrade": "2026-06-09"
+    "lastTrade": "2026-08-04"
   }
 ]
