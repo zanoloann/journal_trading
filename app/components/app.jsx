@@ -521,6 +521,13 @@ function App() {
     },
     resetDemo: () => {
       const acc = clone(window.ACCOUNTS), tr = clone(window.TRADES);
+      // Demo-seed ids are stable for the life of this page load (see SEED_MASTER_ID in
+      // lib/data.jsx) — if these exact accounts/trades were deleted earlier this session, their
+      // ids are still tombstoned, and a "restored" account whose id is still on the deleted list
+      // would just get silently wiped again by the next GitHub sync. Clear that tombstone first,
+      // since restoring the demo is an explicit request to have this data back.
+      window.ghUnmarkDeleted('accounts', acc.map((a) => a.id));
+      window.ghUnmarkDeleted('trades', tr.map((t) => t.id));
       setAccounts(acc); setTrades(tr);
       setScope(acc.find((a) => a.role === 'master')?.id || 'all');
     },
@@ -536,6 +543,12 @@ function App() {
       URL.revokeObjectURL(url);
     },
     restoreBackup: (acc, tr) => {
+      // Same reasoning as resetDemo: loading a backup that happens to include a previously
+      // deleted id (e.g. an old .json export) should actually bring it back, not have it wiped
+      // again on the next sync. A no-op for GitHub-merge results, since those never carry a
+      // tombstoned id in the first place.
+      window.ghUnmarkDeleted('accounts', acc.map((a) => a.id));
+      window.ghUnmarkDeleted('trades', tr.map((t) => t.id));
       setAccounts(acc); setTrades(tr);
       setScope(acc.find((a) => a.role === 'master')?.id || 'all');
     },

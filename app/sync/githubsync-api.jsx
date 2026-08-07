@@ -114,6 +114,18 @@ function ghMarkDeleted(kind, ids) {
   d[kind] = Array.from(new Set([...(d[kind] || []), ...ids]));
   ghSaveDeleted(d);
 }
+// Called when an id is deliberately brought back (resetDemo/restoreBackup in app.jsx) — without
+// this, an id that was deleted earlier in the same session stays tombstoned forever, so the very
+// next sync would silently wipe the "restored" data right back out. Demo-seed ids are stable for
+// the lifetime of a page load (see SEED_MASTER_ID etc. in lib/data.jsx), so "delete the seed
+// accounts, then Restaurer la démo" reintroduces those exact ids — this is what makes it possible.
+function ghUnmarkDeleted(kind, ids) {
+  if (!ids || !ids.length) return;
+  const remove = new Set(ids);
+  const d = ghLoadDeleted();
+  d[kind] = (d[kind] || []).filter(id => !remove.has(id));
+  ghSaveDeleted(d);
+}
 
 // Merge-safe sync: never a blind overwrite in either direction. Pulls whatever is currently on
 // GitHub, unions it with the local data (by id — a trade or account present on either side survives;
@@ -179,4 +191,4 @@ function ghMergeAndSync(cfg, localAccounts, localTrades, localPropfirms) {
   return result;
 }
 
-Object.assign(window, { ghLoadCfg, ghSaveCfg, ghSyncAll, ghPullAll, ghMergeAndSync, ghMarkDeleted, ghLoadDeleted });
+Object.assign(window, { ghLoadCfg, ghSaveCfg, ghSyncAll, ghPullAll, ghMergeAndSync, ghMarkDeleted, ghUnmarkDeleted, ghLoadDeleted });
