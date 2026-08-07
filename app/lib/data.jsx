@@ -247,33 +247,62 @@ function todayIso() { return isoDate(todayDate()); }
 function addDaysIso(iso, n) { const d = new Date(iso + 'T00:00:00'); d.setDate(d.getDate() + n); return isoDate(d); }
 function daysBetweenIso(a, b) { return Math.round((new Date(b + 'T00:00:00') - new Date(a + 'T00:00:00')) / 86400000); }
 
-// Inactivity rule per account.
-// anchor = the minDays-th most recent qualifying day (a calendar day whose NET >= minNet).
-//          if fewer than minDays qualifying days exist -> account opening date.
-// deadline ("date de début d'inactivité") = anchor + windowDays.
-// remaining = deadline - today.  Colors: >15 green, 6..15 amber, <=5 red.
+// Inactivity rule per account — escalating two-stage model matching real prop-firm behavior:
+// anchor = most recent calendar day whose NET >= minNet (a "qualifying day"), or the account's
+//          opening date if no qualifying day has happened yet.
+// dormantDeadline (optional) = anchor + inactDormantDays -> account flagged "dormant" (still
+//          alive, but firm may start warning/limiting it) once passed.
+// deadline ("closeDeadline") = anchor + inactCloseDays -> permanent closure once passed.
+// remaining = deadline - today. status: 'active' | 'dormant' | 'closed'.
+// minQualDays/windowDays are carried through for display only (the informational "N days
+// qualifying per rolling window" rule) — the actual danger clock is days-since-last-qualifying-day,
+// which is what the two deadlines above track and is the number that matters operationally.
 function inactivityInfo(account, trades) {
   if (!account || !account.hasInactivity) return null;
-  const minDays = Math.max(1, Math.round(Number(account.inactMinDays) || 1));
   const minNet = Number(account.inactMinNet) || 0;
+  const minQualDays = Math.max(1, Math.round(Number(account.inactMinQualDays) || 1));
   const windowDays = Math.max(1, Math.round(Number(account.inactWindow) || 1));
+  const closeDays = Math.max(1, Math.round(Number(account.inactCloseDays) || 30));
+  const dormantDays = account.inactDormantDays != null ? Math.max(1, Math.round(Number(account.inactDormantDays))) : null;
   const daily = dailyPnl(trades, account.id);
   const qual = Object.values(daily).filter(d => d.pnl >= minNet).map(d => d.date).sort(); // ascending
-  let anchor, basis;
-  if (qual.length >= minDays) { anchor = qual[qual.length - minDays]; basis = 'trades'; }
-  else { anchor = account.opened || account.startDate || qual[0] || todayIso(); basis = 'opening'; }
-  // deadline (\"date de début d'inactivité\") = anchor + windowDays, inclusive (the Nth day counts,
-  // breach falls the day after) -> anchor + windowDays + 1.
-  const deadline = addDaysIso(anchor, windowDays + 1);
+  const anchor = qual.length ? qual[qual.length - 1] : (account.opened || account.startDate || todayIso());
+  const basis = qual.length ? 'trades' : 'opening';
+  const deadline = addDaysIso(anchor, closeDays);
   const remaining = daysBetweenIso(todayIso(), deadline);
-  const color = remaining > 15 ? 'profit' : remaining > 5 ? 'warn' : 'loss';
-  return { anchor, basis, deadline, remaining, color, ok: remaining > 0, minDays, minNet, windowDays, qualifyingCount: qual.length };
+  const dormantDeadline = dormantDays != null ? addDaysIso(anchor, dormantDays) : null;
+  const dormantRemaining = dormantDeadline != null ? daysBetweenIso(todayIso(), dormantDeadline) : null;
+  let status = 'active';
+  if (remaining <= 0) status = 'closed';
+  else if (dormantRemaining != null && dormantRemaining <= 0) status = 'dormant';
+  const soon = remaining <= 5 || (dormantRemaining != null && dormantRemaining > 0 && dormantRemaining <= 5);
+  const color = status !== 'active' ? 'loss' : soon ? 'warn' : 'profit';
+  return {
+    anchor, basis, deadline, remaining, dormantDeadline, dormantRemaining, status, color,
+    ok: status === 'active', minQualDays, minNet, windowDays, closeDays, dormantDays, qualifyingCount: qual.length,
+  };
 }
 
 function isInactive(account, trades) {
   const info = inactivityInfo(account, trades);
-  if (info) return info.remaining <= 0;
+  if (info) return info.status !== 'active';
   return daysSince(account.lastTrade) >= 7;
+}
+
+// Daily Loss Limit (e.g. Apex 50K EOD: 1 000 $) — cuts the CURRENT session when breached, resets
+// automatically the next calendar day. Independent from the trailing drawdown (cumulative/permanent).
+function dllInfo(account, trades) {
+  if (!account || !account.hasDll) return null;
+  const amount = Number(account.dllAmount) || 0;
+  if (amount <= 0) return null;
+  const daily = dailyPnl(trades, account.id);
+  const today = daily[todayIso()];
+  const todayNet = today ? today.pnl : 0;
+  const margin = +(amount + Math.min(0, todayNet)).toFixed(2); // shrinks toward 0 only on a losing day
+  const breached = todayNet <= -amount;
+  const ratio = amount > 0 ? margin / amount : 1;
+  const color = breached ? 'loss' : ratio <= 0.3 ? 'warn' : 'profit';
+  return { amount, todayNet, margin, breached, color };
 }
 
 function accountTradePnl(account, trades) {
@@ -333,11 +362,19 @@ function drawdownInfo(account, trades) {
   return { type, amount, peak, threshold: +threshold.toFixed(2), balance, margin, color, capped };
 }
 
-// ---------------- Payout eligibility (e.g. Apex 50K EOD) ----------------
-// Tracks: qualifying days (net >= payoutMinNet) since the last recorded payout (or account
-// opening if none yet), balance vs safety net / minimum payout balance, the 50% consistency
-// rule (no single qualifying day's profit >= consistencyPct% of total profit in the window),
-// and the next payout cap from the account's payout scale.
+// ---------------- Payout eligibility ----------------
+// Two models, selected per account type via `payoutModel`:
+//  - 'scale' (Apex-style): progressive cap per payout from `payoutScale`, a consistency rule
+//    (no single qualifying day's profit >= consistencyPct% of total profit since the last
+//    payout), a minimum balance to maintain, and — for Legacy — an extra "total trading days"
+//    floor (payoutMinTradingDays) plus a scale that EXPIRES (payoutCapExpires: once exhausted,
+//    the cap disappears entirely instead of repeating the last tier) and a safety-net requirement
+//    that only applies to the first N payouts (safetyNetMaxPayouts).
+//  - 'pctCapped' (Lucid Flex-style): a flat cut (payoutPct%) of profit since the last payout,
+//    capped at a fixed ceiling (payoutCap) that does NOT progress with payout count, plus a gate
+//    requiring the account to be net profitable over its whole funded life (requireOverallProfit).
+// Both models share: qualifying days (net >= payoutMinNet) since the last recorded payout (or
+// account opening if none yet), and a maxPayouts closure count.
 function payoutInfo(account, trades) {
   if (!account || !account.hasPayout) return null;
   const payouts = (account.payouts || []).slice().sort((a, b) => a.date < b.date ? -1 : 1);
@@ -349,24 +386,92 @@ function payoutInfo(account, trades) {
   const totalProfit = daysInWindow.reduce((s, d) => s + Math.max(0, d.pnl), 0);
   const bestDay = daysInWindow.reduce((m, d) => Math.max(m, d.pnl), 0);
   const consistencyPct = Number(account.consistencyPct) || 0;
-  const consistencyOk = totalProfit > 0 ? (bestDay / totalProfit) * 100 < consistencyPct : true;
+  const consistencyOk = consistencyPct > 0 ? (totalProfit > 0 ? (bestDay / totalProfit) * 100 < consistencyPct : true) : true;
   const bestDayShare = totalProfit > 0 ? (bestDay / totalProfit) * 100 : 0;
   const balance = accountBalance(account, trades);
   const minBalance = Number(account.payoutMinBalance) || 0;
   const safetyNet = Number(account.safetyNet) || 0;
   const scale = Array.isArray(account.payoutScale) ? account.payoutScale : [];
-  const maxPayouts = Number(account.maxPayouts) || scale.length || Infinity;
-  const nextCap = payouts.length < scale.length ? scale[payouts.length] : (scale.length ? scale[scale.length - 1] : null);
+  const model = account.payoutModel || (scale.length ? 'scale' : 'pctCapped');
+  const maxPayouts = Number(account.maxPayouts) || (model === 'scale' ? scale.length : 0) || Infinity;
   const closed = payouts.length >= maxPayouts;
   const daysOk = qualDays.length >= (Number(account.payoutMinDays) || 0);
+  const minTradingDays = Number(account.payoutMinTradingDays) || 0;
+  const tradingDaysOk = minTradingDays ? daysInWindow.length >= minTradingDays : true;
   const balanceOk = payouts.length < (Number(account.safetyNetMaxPayouts) || Infinity) ? balance >= minBalance : true;
-  const eligible = !closed && daysOk && balanceOk && consistencyOk;
+
+  // Payout $ amount is based on NET profit since the window start (all days, losses included) —
+  // deliberately distinct from `totalProfit` above (sum of winning days only), which exists purely
+  // to compute the consistency ratio. Reusing totalProfit here would overstate the payout by
+  // ignoring losing days entirely.
+  const netProfit = daysInWindow.reduce((s, d) => s + d.pnl, 0);
+  let nextCap, amountEstimate, overallProfitOk = true;
+  if (model === 'pctCapped') {
+    const pct = Number(account.payoutPct) || 50;
+    const cap = account.payoutCap != null ? Number(account.payoutCap) : Infinity;
+    nextCap = cap;
+    amountEstimate = Math.min(netProfit * pct / 100, cap);
+    if (account.requireOverallProfit) overallProfitOk = balance > account.size;
+  } else {
+    nextCap = payouts.length < scale.length ? scale[payouts.length]
+      : (scale.length ? (account.payoutCapExpires ? null : scale[scale.length - 1]) : null);
+    amountEstimate = nextCap != null ? Math.min(netProfit, nextCap) : netProfit;
+  }
+
+  const eligible = !closed && daysOk && tradingDaysOk && balanceOk && consistencyOk && overallProfitOk;
   const withdrawable = Math.max(0, +(balance - safetyNet).toFixed(2));
   return {
     payouts, since, qualDays: qualDays.length, minDays: Number(account.payoutMinDays) || 0,
+    tradingDays: daysInWindow.length, minTradingDays, tradingDaysOk,
     minNet, balance, minBalance, safetyNet, withdrawable, consistencyOk, bestDayShare, consistencyPct,
-    nextCap, payoutCount: payouts.length, maxPayouts, closed, eligible, payoutMin: Number(account.payoutMin) || 0,
+    nextCap, amountEstimate: +Math.max(0, amountEstimate).toFixed(2), payoutCount: payouts.length, maxPayouts,
+    closed, eligible, overallProfitOk, model, payoutSplit: Number(account.payoutSplit) || 100,
+    payoutSplitNote: account.payoutSplitNote || null, payoutMin: Number(account.payoutMin) || 0,
   };
+}
+
+// ---------------- Evaluation-phase progress (Lucid Flex eval, etc.) ----------------
+// Not a payout — a pass/fail gate: profit >= target AND the same consistency rule as payouts
+// (no single day's profit >= evalConsistencyPct% of total profit since the account opened).
+function evalProgress(account, trades) {
+  if (!account || !account.isEval) return null;
+  const balance = accountBalance(account, trades);
+  const profit = +(balance - account.size).toFixed(2);
+  const target = Number(account.profitTarget) || 0;
+  const pct = target > 0 ? Math.max(0, Math.min(100, (profit / target) * 100)) : 0;
+  const daily = dailyPnl(trades, account.id);
+  const days = Object.values(daily);
+  const totalProfit = days.reduce((s, d) => s + Math.max(0, d.pnl), 0);
+  const bestDay = days.reduce((m, d) => Math.max(m, d.pnl), 0);
+  const consistencyPct = Number(account.evalConsistencyPct) || 0;
+  const consistencyOk = consistencyPct > 0 ? (totalProfit > 0 ? (bestDay / totalProfit) * 100 < consistencyPct : true) : true;
+  const bestDayShare = totalProfit > 0 ? (bestDay / totalProfit) * 100 : 0;
+  const passed = profit >= target && target > 0 && consistencyOk;
+  return { profit, target, pct, consistencyOk, bestDayShare, consistencyPct, passed };
+}
+
+// ---------------- Account health (one aggregate for the "at a glance" widget) ----------------
+// Combines drawdown/DLL/inactivity/payout (and eval progress) into a single overall severity so
+// the UI can render one clear color/status per account instead of scanning five separate numbers.
+// Severity order: loss (danger) > warn > neutral > profit (all clear).
+const HEALTH_SEVERITY = { loss: 3, warn: 2, neutral: 1, profit: 0 };
+function accountHealth(account, trades) {
+  if (!account) return null;
+  const dd = drawdownInfo(account, trades);
+  const dll = dllInfo(account, trades);
+  const inact = inactivityInfo(account, trades);
+  const payout = payoutInfo(account, trades);
+  const evalP = evalProgress(account, trades);
+  const balance = accountBalance(account, trades);
+  const parts = [];
+  if (dd) parts.push({ key: 'dd', label: dd.type === 'trailing' ? 'Drawdown suiveur' : 'Drawdown statique', color: dd.color, detail: dd });
+  if (dll) parts.push({ key: 'dll', label: 'Perte journalière (DLL)', color: dll.color, detail: dll });
+  if (inact) parts.push({ key: 'inact', label: 'Inactivité', color: inact.color, detail: inact });
+  if (payout) parts.push({ key: 'payout', label: 'Payout', color: payout.eligible ? 'profit' : 'neutral', detail: payout });
+  if (evalP) parts.push({ key: 'eval', label: 'Évaluation', color: evalP.passed ? 'profit' : (evalP.consistencyOk ? 'neutral' : 'warn'), detail: evalP });
+  let overall = 'profit';
+  parts.forEach(p => { if ((HEALTH_SEVERITY[p.color] ?? 0) > HEALTH_SEVERITY[overall]) overall = p.color; });
+  return { balance, parts, overall };
 }
 
 // ---------------- Demo dataset (shown to brand-new users during the tour) ----------------
@@ -376,8 +481,8 @@ const DEMO_ACCOUNTS = [
     ddType: 'trailing', ddAmount: 2500, ddStop: 52500 },
   { id: 'demo_s', name: 'Compte 2 — Démo', firm: 'Apex', size: 50000, role: 'slave', coef: 1,
     status: 'funded', instrument: 'MES', color: '#1f8a5b', eod: 2000, opened: '2026-05-01', lastTrade: '2026-06-26',
-    ddType: 'trailing', ddAmount: 2500, ddStop: 52500,
-    hasInactivity: true, inactMinDays: 2, inactMinNet: 50, inactWindow: 30 },
+    ddType: 'trailing', ddAmount: 2500, ddStop: 52500, hasDll: true, dllAmount: 1000,
+    hasInactivity: true, inactMinNet: 50, inactMinQualDays: 2, inactWindow: 30, inactDormantDays: 15, inactCloseDays: 30 },
   { id: 'demo_c', name: 'Compte 3 — Démo', firm: 'Lucid', size: 25000, role: 'slave', coef: 1,
     status: 'funded', instrument: 'ES', color: '#b9802a', eod: 1000, opened: '2026-06-12' },
 ];
@@ -410,5 +515,5 @@ Object.assign(window, {
   DEMO_ACCOUNTS, DEMO_TRADES,
   FEE, REPLAY_ACCOUNT_ID, REPLAY_ACCOUNT, ACCOUNTS, TRADES, INSTRUMENTS, MINDSET_LABEL, buildLegs, refLeg, computeRefAccountId,
   fmtMoney, fmtNum, fmtPct, fmtDateFR, tradePnl, tradeGross, tradeFees, tradeContracts,
-  tradesForScope, computeStats, dailyPnl, equityCurve, tradesInRange, periodRange, PERIOD_LABEL, daysSince, todayDate, todayIso, addDaysIso, daysBetweenIso, inactivityInfo, isInactive, drawdownInfo, accountBalance, peakEquity, accountTradePnl, payoutInfo, isoDate,
+  tradesForScope, computeStats, dailyPnl, equityCurve, tradesInRange, periodRange, PERIOD_LABEL, daysSince, todayDate, todayIso, addDaysIso, daysBetweenIso, inactivityInfo, isInactive, dllInfo, drawdownInfo, accountBalance, peakEquity, accountTradePnl, payoutInfo, evalProgress, accountHealth, isoDate,
 });

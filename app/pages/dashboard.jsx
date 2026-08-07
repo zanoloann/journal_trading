@@ -19,15 +19,18 @@ function AccountHealth({ compact }) {
           const pnlPct = ((bal - a.size) / a.size) * 100;
           const tone = info ? info.color : null;
           const toneVar = tone === 'profit' ? 'var(--profit)' : tone === 'warn' ? 'var(--warn)' : tone === 'loss' ? 'var(--loss)' : 'var(--ink-3)';
+          const health = window.accountHealth(a, ctx.trades);
+          const healthVar = health.overall === 'loss' ? 'var(--loss)' : health.overall === 'warn' ? 'var(--warn)' : 'var(--profit)';
           return (
             <div key={a.id} onClick={() => { ctx.setScope(a.id); ctx.nav('accounts'); }}
               className="tj-row" style={{
                 padding: '10px 12px', borderRadius: 12, background: 'var(--surface-2)',
-                border: '1px solid ' + (inactive ? 'var(--loss)' : (info && info.color === 'warn' ? 'var(--warn)' : 'var(--border)')), cursor: 'pointer',
+                border: '1px solid ' + (health.overall !== 'profit' ? healthVar : 'var(--border)'), cursor: 'pointer',
               }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 10, alignItems: 'center' }}>
               <div style={{ minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span title={health.overall === 'loss' ? 'Danger' : health.overall === 'warn' ? 'Attention' : 'Sain'} style={{ width: 8, height: 8, borderRadius: 999, background: healthVar, flexShrink: 0 }} />
                   <window.AccountDot color={a.color} />
                   <span style={{ fontWeight: 600, fontSize: 13.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.name}</span>
                   {a.role === 'master' && <window.Badge tone="ink" style={{ fontSize: 10, padding: '2px 7px' }}>Maître</window.Badge>}
@@ -69,6 +72,23 @@ function AccountHealth({ compact }) {
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4, fontSize: 11, color: 'var(--ink-3)' }}>
                       <span>Marge DD <strong style={{ color: ddVar }}>{window.fmtMoney(dd.margin, { dec: 2 })}</strong></span>
                       <span>seuil {window.fmtMoney(dd.threshold, { signed: false })}{dd.capped ? ' · figé' : ''}</span>
+                    </div>
+                  </div>
+                );
+              })()}
+              {(() => {
+                const dll = window.dllInfo(a, ctx.trades);
+                if (!dll) return null;
+                const dllVar = dll.color === 'profit' ? 'var(--profit)' : dll.color === 'warn' ? 'var(--warn)' : 'var(--loss)';
+                const ratio = dll.amount > 0 ? Math.max(0, Math.min(1, dll.margin / dll.amount)) : 0;
+                return (
+                  <div style={{ marginTop: 8 }}>
+                    <div style={{ height: 8, borderRadius: 999, background: 'var(--surface)', overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: (ratio * 100) + '%', borderRadius: 999, background: dllVar }} />
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4, fontSize: 11, color: 'var(--ink-3)' }}>
+                      <span>DLL (jour) <strong style={{ color: dllVar }}>{window.fmtMoney(dll.margin, { dec: 2 })}</strong></span>
+                      <span>max {window.fmtMoney(dll.amount, { signed: false })}{dll.breached ? ' · atteint' : ''}</span>
                     </div>
                   </div>
                 );

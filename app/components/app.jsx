@@ -369,6 +369,54 @@ function App() {
     saveLS('tj_del_lucid_v1', true);
   }, []);
 
+  // one-time migration (refonte config prop firm): the 3 original seed accounts (50k, trailing
+  // 2000/52100) predate the firm/type system and were never tagged — apply the real Apex 50K EOD
+  // rule set to them. Also recovers any account referenced by a trade leg but missing from the
+  // accounts list (e.g. wiped by an earlier "Réinitialiser la démo" click, which replaces accounts
+  // without touching already-synced trades — a real bug — leaving orphaned legs with real P&L).
+  // Recovered accounts are named "à vérifier" so they're obviously flagged for a manual check
+  // (exact size/type guessed from the Lucid fee-per-contract match); nothing is deleted.
+  useEffectApp(() => {
+    if (loadLS('tj_migrate_propfirm_v1', false)) return;
+    setAccounts((prev) => {
+      const apexEod = (window.firmAccountTypes('Apex') || []).find((x) => x.id === 'apex_50_eod');
+      let next = prev.map((a) => {
+        if (a.firm || a.ddType !== 'trailing' || Number(a.ddAmount) !== 2000 || Number(a.ddStop) !== 52100 || Number(a.size) !== 50000) return a;
+        if (!apexEod) return a;
+        const { id, label, ...rules } = apexEod;
+        return { ...a, firm: 'Apex', accountTypeId: apexEod.id, ...rules };
+      });
+      const known = new Set(next.map((a) => a.id));
+      known.add(window.REPLAY_ACCOUNT_ID);
+      const missing = new Map(); // accountId -> {first, last} trade date seen
+      trades.forEach((tr) => {
+        if (!tr.accounts) return;
+        tr.accounts.forEach((l) => {
+          if (known.has(l.accountId)) return;
+          const e = missing.get(l.accountId) || { first: tr.date, last: tr.date };
+          if (tr.date < e.first) e.first = tr.date;
+          if (tr.date > e.last) e.last = tr.date;
+          missing.set(l.accountId, e);
+        });
+      });
+      if (missing.size) {
+        const lucid25 = (window.firmAccountTypes('Lucid') || []).find((x) => x.id === 'lucid_25_funded');
+        const { id: tid, label, ...rules } = lucid25 || {};
+        let i = 0;
+        missing.forEach((e, accId) => {
+          i++;
+          next = [...next, {
+            id: accId, name: 'Lucid récupéré ' + i + ' (à vérifier)', firm: 'Lucid', accountTypeId: tid || null,
+            role: 'slave', coef: 1, status: 'funded', instrument: 'MES', color: '#b9802a',
+            opened: e.first, lastTrade: e.last, ...rules,
+          }];
+        });
+      }
+      return next;
+    });
+    saveLS('tj_migrate_propfirm_v1', true);
+  }, []);
+
   const ctx = {
     t, route, scope: effScope, trades, accounts: liveAccounts, allAccounts: accounts, accountsView, showReplay, journalDateFilter, period, range, viewTrades, periodTrades,
     nav: setRoute, setScope, setPeriod, setShowReplay, setJournalDateFilter,
@@ -390,28 +438,19 @@ function App() {
     deleteTrades: (ids) => setTrades((prev) => prev.filter((x) => !ids.includes(x.id))),
     addAccount: (a) => setAccounts((prev) => [...prev, { ...a, id: 'acc_' + Date.now() }]),
     updateAccount: (id, patch) => setAccounts((prev) => prev.map((a) => a.id === id ? { ...a, ...patch } : a)),
+    // Pushes a firm/account-type's full rule set (drawdown, DLL, inactivity, payout, eval fields —
+    // whatever the type carries) onto every account tied to it, whenever that type's definition
+    // changes in Paramètres. A generic spread rather than a field-by-field list so new rule fields
+    // (added to a type later) propagate automatically without another edit here. Never touches
+    // fields a type doesn't govern (name, color, role, coef, opened, payouts/adjustments history).
     resyncAccountsToType: (firm, typeId) => {
       const t = window.firmAccountTypes(firm).find((x) => x.id === typeId);
       if (!t) return;
+      const { id, label, ...rules } = t;
       setAccounts((prev) => prev.map((a) => {
         if (String(a.firm || '').toLowerCase() !== String(firm || '').toLowerCase() || a.accountTypeId !== typeId) return a;
-        const n = { ...a };
-        if (t.size != null && t.size !== '') n.size = Number(t.size);
-        if (t.eod != null && t.eod !== '') { n.eod = Number(t.eod); n.ddAmount = Number(t.eod); }
-        n.ddType = t.ddType || 'none';
-        if (n.ddType !== 'none') {
-          n.ddStop = (t.ddStop != null && t.ddStop !== '') ? Number(t.ddStop) : '';
-        }
-        n.hasInactivity = !!t.hasInactivity;
-        if (t.hasInactivity) { n.inactMinDays = t.inactMinDays; n.inactMinNet = t.inactMinNet; n.inactWindow = t.inactWindow; }
-        n.hasPayout = !!t.hasPayout;
-        if (t.hasPayout) {
-          n.payoutMinDays = t.payoutMinDays; n.payoutMinNet = t.payoutMinNet; n.safetyNet = t.safetyNet;
-          n.payoutMinBalance = t.payoutMinBalance; n.payoutMin = t.payoutMin; n.consistencyPct = t.consistencyPct;
-          n.maxPayouts = t.maxPayouts; n.payoutScale = t.payoutScale; n.payoutSplit = t.payoutSplit;
-          if (t.safetyNetMaxPayouts !== undefined) n.safetyNetMaxPayouts = t.safetyNetMaxPayouts;
-          if (!n.payouts) n.payouts = [];
-        }
+        const n = { ...a, ...rules };
+        if (rules.hasPayout && !n.payouts) n.payouts = [];
         return n;
       }));
     },

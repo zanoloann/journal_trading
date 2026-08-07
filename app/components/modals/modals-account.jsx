@@ -9,64 +9,71 @@ function AccountModal({ accountId, onClose }) {
   const existing = editing ? ctx.accounts.find(a => a.id === accountId) : null;
   const [f, setF] = useStateM(existing || {
     name: '', firm: '', accountTypeId: '', size: 50000, role: 'slave', coef: 2, status: 'funded',
-    color: '#1f8a5b', eod: 2000, opened: window.todayIso(), target: 3000,
-    hasInactivity: false, inactMinDays: 4, inactMinNet: 50, inactWindow: 7,
-    ddType: 'trailing', ddAmount: 2000, ddStop: 52100,
+    color: '#1f8a5b', opened: window.todayIso(),
+    ddType: 'none', ddAmount: 0,
   });
   const set = (k, v) => setF(p => ({ ...p, [k]: v }));
   const [reval, setReval] = useStateM('');
-  // applying a firm's account type pulls its rules (size, EOD, drawdown, inactivity) into the form
+  // Applying a firm's account type pulls its ENTIRE rule set (drawdown, DLL, inactivity, payout,
+  // eval fields — whatever the type carries) into the form as a flat spread, so new rule fields
+  // added to a type later show up here automatically. Only firm/accountTypeId are set otherwise.
   function applyType(firm, typeId) {
     const t = window.firmAccountTypes(firm).find(x => x.id === typeId);
     setF(p => {
-      const n = { ...p, firm, accountTypeId: typeId };
-      if (t) {
-        if (t.size != null) n.size = t.size;
-        if (t.eod != null && t.eod !== '') { n.eod = t.eod; n.ddAmount = t.eod; }
-        n.ddType = t.ddType || 'none';
-        if (t.ddStop != null && t.ddStop !== '') n.ddStop = t.ddStop;
-        if (t.target != null && t.target !== '') n.target = t.target;
-        n.hasInactivity = !!t.hasInactivity;
-        if (t.hasInactivity) { n.inactMinDays = t.inactMinDays; n.inactMinNet = t.inactMinNet; n.inactWindow = t.inactWindow; }
-        n.hasPayout = !!t.hasPayout;
-        if (t.hasPayout) {
-          n.payoutMinDays = t.payoutMinDays; n.payoutMinNet = t.payoutMinNet; n.safetyNet = t.safetyNet;
-          n.payoutMinBalance = t.payoutMinBalance; n.payoutMin = t.payoutMin; n.consistencyPct = t.consistencyPct;
-          n.maxPayouts = t.maxPayouts; n.payoutScale = t.payoutScale; n.payoutSplit = t.payoutSplit;
-        }
-      }
-      return n;
+      if (!t) return { ...p, firm, accountTypeId: typeId };
+      const { id, label, ...rules } = t;
+      return { ...p, firm, accountTypeId: typeId, ...rules };
     });
   }
   const palette = ['#1f8a5b', '#2a6fdb', '#9b6dff', '#b9802a', '#d4504e', '#1b1a17'];
   const isMaster = f.role === 'master';
   function save() {
     const instrument = isMaster ? 'MES+ES' : (f.instrument || 'MES');
-    const base = { ...f, size: Number(f.size), coef: Math.max(1, Math.round(Number(f.coef)) || 1), eod: Number(f.eod), instrument };
-    base.hasInactivity = !!f.hasInactivity;
-    if (f.hasInactivity) {
-      base.inactMinDays = Math.max(1, Number(f.inactMinDays) || 1);
-      base.inactMinNet = Number(f.inactMinNet) || 0;
-      base.inactWindow = Math.max(1, Number(f.inactWindow) || 1);
-    }
+    const base = { ...f, size: Number(f.size), coef: Math.max(1, Math.round(Number(f.coef)) || 1), instrument };
     base.ddType = f.ddType || 'none';
     if (base.ddType !== 'none') {
       base.ddAmount = Number(f.ddAmount) || 0;
       if (base.ddType === 'trailing') base.ddStop = (f.ddStop === '' || f.ddStop == null) ? '' : Number(f.ddStop);
     }
+    base.hasDll = !!f.hasDll;
+    if (f.hasDll) base.dllAmount = Number(f.dllAmount) || 0;
     base.opened = f.opened || window.todayIso();
+    base.hasInactivity = !!f.hasInactivity;
+    if (f.hasInactivity) {
+      base.inactMinNet = Number(f.inactMinNet) || 0;
+      base.inactMinQualDays = Math.max(1, Number(f.inactMinQualDays) || 1);
+      base.inactWindow = Math.max(1, Number(f.inactWindow) || 1);
+      base.inactCloseDays = Math.max(1, Number(f.inactCloseDays) || 30);
+      base.inactDormantDays = (f.inactDormantDays === '' || f.inactDormantDays == null) ? null : Number(f.inactDormantDays);
+    }
     base.hasPayout = !!f.hasPayout;
     if (f.hasPayout) {
+      base.payoutModel = f.payoutModel || 'scale';
       base.payoutMinDays = Number(f.payoutMinDays) || 0;
       base.payoutMinNet = Number(f.payoutMinNet) || 0;
-      base.safetyNet = Number(f.safetyNet) || 0;
-      base.payoutMinBalance = Number(f.payoutMinBalance) || 0;
-      base.payoutMin = Number(f.payoutMin) || 0;
+      if (f.payoutMinTradingDays != null) base.payoutMinTradingDays = Number(f.payoutMinTradingDays) || 0;
       base.consistencyPct = Number(f.consistencyPct) || 0;
+      if (base.payoutModel === 'scale') {
+        base.safetyNet = Number(f.safetyNet) || 0;
+        if (f.safetyNetMaxPayouts != null) base.safetyNetMaxPayouts = Number(f.safetyNetMaxPayouts) || 0;
+        base.payoutMinBalance = Number(f.payoutMinBalance) || 0;
+        base.payoutMin = Number(f.payoutMin) || 0;
+        base.payoutScale = Array.isArray(f.payoutScale) ? f.payoutScale : [];
+        base.payoutCapExpires = !!f.payoutCapExpires;
+      } else {
+        base.payoutPct = Number(f.payoutPct) || 50;
+        base.payoutCap = Number(f.payoutCap) || 0;
+        base.requireOverallProfit = !!f.requireOverallProfit;
+      }
       base.maxPayouts = Number(f.maxPayouts) || 0;
-      base.payoutScale = Array.isArray(f.payoutScale) ? f.payoutScale : [];
       base.payoutSplit = Number(f.payoutSplit) || 100;
       if (!editing || !existing || !existing.payouts) base.payouts = [];
+    }
+    base.isEval = !!f.isEval;
+    if (f.isEval) {
+      base.profitTarget = Number(f.profitTarget) || 0;
+      base.maxLossLimit = Number(f.maxLossLimit) || 0;
+      base.evalConsistencyPct = Number(f.evalConsistencyPct) || 0;
     }
     if (editing) ctx.updateAccount(accountId, base);
     else ctx.addAccount({ ...base, lastTrade: f.opened || window.todayIso() });
@@ -85,7 +92,7 @@ function AccountModal({ accountId, onClose }) {
             {window.listPropfirms().map(n => <option key={n} value={n}>{n}</option>)}
           </select>
         </Field>
-        <Field label="Type de compte" hint={f.firm ? "Définit EOD, drawdown et règle d'inactivité" : 'Choisissez d\'abord la prop firm'}>
+        <Field label="Type de compte" hint={f.firm ? "Définit taille, drawdown, DLL, inactivité et payout" : 'Choisissez d\'abord la prop firm'}>
           {(() => {
             const types = f.firm ? window.firmAccountTypes(f.firm) : [];
             return (
@@ -123,6 +130,19 @@ function AccountModal({ accountId, onClose }) {
         )}
       </div>
 
+      {/* daily loss limit — read-only summary */}
+      <div style={{ marginTop: 16, padding: 16, borderRadius: 12, background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, fontSize: 13.5 }}><window.Icon name="alert" size={16} /> Perte journalière max. (DLL)</div>
+        {f.hasDll ? (
+          <div style={{ fontSize: 13, color: 'var(--ink-2)', marginTop: 8, lineHeight: 1.6 }}>
+            {window.fmtMoney(Number(f.dllAmount) || 0, { signed: false })} net par jour · coupe la séance en cours, reset le lendemain.
+            <div style={{ fontSize: 11.5, color: 'var(--ink-3)', marginTop: 4 }}>Défini par le type de compte (modifiable dans Paramètres).</div>
+          </div>
+        ) : (
+          <div style={{ fontSize: 13, color: 'var(--ink-3)', marginTop: 8 }}>Aucune limite de perte journalière pour ce type de compte.</div>
+        )}
+      </div>
+
       {/* inactivity rule — read-only summary (configured in Paramètres, per account type) */}
       <div style={{ marginTop: 16, padding: 16, borderRadius: 12, background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, fontSize: 13.5 }}>
@@ -130,13 +150,24 @@ function AccountModal({ accountId, onClose }) {
         </div>
         {f.hasInactivity ? (
           <div style={{ fontSize: 13, color: 'var(--ink-2)', marginTop: 8, lineHeight: 1.6 }}>
-            Minimum <strong>{f.inactMinDays}</strong> journée(s) à <strong>{window.fmtMoney(Number(f.inactMinNet) || 0, { signed: false })}</strong> net, sur <strong>{f.inactWindow}</strong> journées glissantes.
+            Minimum <strong>{f.inactMinQualDays}</strong> journée(s) à <strong>{window.fmtMoney(Number(f.inactMinNet) || 0, { signed: false })}</strong> net sur <strong>{f.inactWindow}</strong> jours glissants.
+            {f.inactDormantDays ? <> Statut dormant dès <strong>{f.inactDormantDays} j</strong> sans activité qualifiante,</> : ''} clôture après <strong>{f.inactCloseDays} j</strong>.
             <div style={{ fontSize: 11.5, color: 'var(--ink-3)', marginTop: 4 }}>Définie par le type de compte (modifiable dans Paramètres).</div>
           </div>
         ) : (
           <div style={{ fontSize: 13, color: 'var(--ink-3)', marginTop: 8 }}>Aucune règle d'inactivité pour ce type de compte.</div>
         )}
       </div>
+
+      {f.isEval && (
+        <div style={{ marginTop: 16, padding: 16, borderRadius: 12, background: 'var(--info-bg)', border: '1px solid color-mix(in oklab, var(--info) 25%, transparent)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, fontSize: 13.5, color: 'var(--info)' }}><window.Icon name="target" size={16} /> Compte d'évaluation</div>
+          <div style={{ fontSize: 13, color: 'var(--ink-2)', marginTop: 8, lineHeight: 1.6 }}>
+            Objectif de profit <strong>{window.fmtMoney(Number(f.profitTarget) || 0, { signed: false })}</strong> · perte max <strong>{window.fmtMoney(Number(f.maxLossLimit) || 0, { signed: false })}</strong> · consistance &lt; <strong>{f.evalConsistencyPct} %</strong>.
+            {(f.sizeCapMini || f.sizeCapMicro) && <div style={{ marginTop: 4 }}>Taille max : {f.sizeCapMini ? f.sizeCapMini + ' mini' : ''}{f.sizeCapMini && f.sizeCapMicro ? ' / ' : ''}{f.sizeCapMicro ? f.sizeCapMicro + ' micros' : ''}</div>}
+          </div>
+        </div>
+      )}
 
       {editing && existing && (() => {
         const currentBal = window.accountBalance(existing, ctx.trades);

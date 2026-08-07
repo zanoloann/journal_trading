@@ -11,11 +11,11 @@ function PayoutCard({ a }) {
 
   const daysOk = info.qualDays >= info.minDays;
   const balOk = info.balance >= info.minBalance;
-  const reqs = [
-    { label: 'Jours qualifiants', ok: daysOk },
-    { label: 'Solde minimum', ok: balOk },
-    { label: 'Consistance', ok: info.consistencyOk },
-  ];
+  const reqs = [{ label: 'Jours qualifiants', ok: daysOk }];
+  if (info.minTradingDays > 0) reqs.push({ label: 'Jours de trading (total)', ok: info.tradingDaysOk });
+  if (info.minBalance > 0) reqs.push({ label: 'Solde minimum', ok: balOk });
+  if (info.consistencyPct > 0) reqs.push({ label: 'Consistance', ok: info.consistencyOk });
+  if (info.model === 'pctCapped' && a.requireOverallProfit) reqs.push({ label: 'Profit global positif', ok: info.overallProfitOk });
   const metCount = reqs.filter(r => r.ok).length;
   const status = info.closed ? { label: 'Compte fermé (max payouts atteint)', tone: 'ink' }
     : info.eligible ? { label: 'Éligible au payout', tone: 'profit' }
@@ -86,25 +86,50 @@ function PayoutCard({ a }) {
         <Row label={'Jours qualifiants (≥ ' + window.fmtMoney(info.minNet, { signed: false }) + ' net/jour)'}
           ok={daysOk} value={info.qualDays + ' / ' + info.minDays}
           sub={info.since ? 'depuis le ' + window.fmtDateFR(info.since) : 'depuis l\'ouverture du compte'} />
-        <div style={{ height: 1, background: 'var(--border)' }} />
-        <Row label="Solde vs minimum requis" ok={balOk}
-          value={window.fmtMoney(info.balance, { dec: 2, signed: false })}
-          sub={'Minimum ' + window.fmtMoney(info.minBalance, { signed: false }) + ' · filet de sécurité ' + window.fmtMoney(info.safetyNet, { signed: false })} />
-        <div style={{ height: 1, background: 'var(--border)' }} />
-        <Row label={'Consistance (< ' + info.consistencyPct + ' %)'} ok={info.consistencyOk}
-          value={info.bestDayShare.toFixed(0) + ' %'}
-          sub="Part du meilleur jour dans le profit total depuis le dernier payout" />
+        {info.minTradingDays > 0 && (<>
+          <div style={{ height: 1, background: 'var(--border)' }} />
+          <Row label="Jours de trading (total, qualifiants ou non)" ok={info.tradingDaysOk}
+            value={info.tradingDays + ' / ' + info.minTradingDays} sub="Toute séance compte, pas seulement les qualifiantes" />
+        </>)}
+        {info.minBalance > 0 && (<>
+          <div style={{ height: 1, background: 'var(--border)' }} />
+          <Row label="Solde vs minimum requis" ok={balOk}
+            value={window.fmtMoney(info.balance, { dec: 2, signed: false })}
+            sub={'Minimum ' + window.fmtMoney(info.minBalance, { signed: false }) + (info.safetyNet ? ' · filet de sécurité ' + window.fmtMoney(info.safetyNet, { signed: false }) : '')} />
+        </>)}
+        {info.consistencyPct > 0 && (<>
+          <div style={{ height: 1, background: 'var(--border)' }} />
+          <Row label={'Consistance (< ' + info.consistencyPct + ' %)'} ok={info.consistencyOk}
+            value={info.bestDayShare.toFixed(0) + ' %'}
+            sub="Part du meilleur jour dans le profit total depuis le dernier payout" />
+        </>)}
+        {info.model === 'pctCapped' && a.requireOverallProfit && (<>
+          <div style={{ height: 1, background: 'var(--border)' }} />
+          <Row label="Profit global positif (cycle entier)" ok={info.overallProfitOk}
+            value={window.fmtMoney(info.balance - a.size, { dec: 2 })} sub="Solde actuel vs capital de départ" />
+        </>)}
         <div style={{ height: 1, background: 'var(--border)' }} />
           </>
         )}
         <div style={{ display: 'grid', gridTemplateColumns: '20px 1fr auto', gap: 10, alignItems: 'center', padding: '9px 0' }}>
           <window.Icon name="wallet" size={16} style={{ color: 'var(--ink-3)' }} />
           <div>
-            <div style={{ fontSize: 13, fontWeight: 600 }}>Prochain plafond de payout</div>
-            <div style={{ fontSize: 11.5, color: 'var(--ink-3)', marginTop: 2 }}>{info.payoutCount} / {info.maxPayouts} payouts déjà effectués · split {a.payoutSplit || 100} %</div>
+            <div style={{ fontSize: 13, fontWeight: 600 }}>{info.model === 'pctCapped' ? 'Plafond fixe (% du profit)' : 'Prochain plafond de payout'}</div>
+            <div style={{ fontSize: 11.5, color: 'var(--ink-3)', marginTop: 2 }}>{info.payoutCount} / {info.maxPayouts} payouts déjà effectués · split {info.payoutSplit} %</div>
           </div>
-          <div style={{ fontSize: 13.5, fontWeight: 700, textAlign: 'right' }}>{info.nextCap != null ? window.fmtMoney(info.nextCap, { signed: false }) : '—'}</div>
+          <div style={{ fontSize: 13.5, fontWeight: 700, textAlign: 'right' }}>{info.nextCap != null && info.nextCap !== Infinity ? window.fmtMoney(info.nextCap, { signed: false }) : (info.model === 'scale' ? 'illimité' : '—')}</div>
         </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '20px 1fr auto', gap: 10, alignItems: 'center', padding: '9px 0' }}>
+          <window.Icon name="stats" size={16} style={{ color: 'var(--ink-3)' }} />
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 600 }}>Estimation du prochain payout</div>
+            <div style={{ fontSize: 11.5, color: 'var(--ink-3)', marginTop: 2 }}>{info.model === 'pctCapped' ? (a.payoutPct || 50) + ' % du profit depuis le dernier payout, plafonné' : 'Profit depuis le dernier payout, dans la limite du plafond'}</div>
+          </div>
+          <div style={{ fontSize: 13.5, fontWeight: 700, textAlign: 'right' }}><window.PnL value={info.amountEstimate} dec={2} /></div>
+        </div>
+        {info.payoutSplitNote && (
+          <div style={{ marginTop: 4, fontSize: 11.5, color: 'var(--ink-3)', lineHeight: 1.5 }}>{info.payoutSplitNote}</div>
+        )}
 
         <div style={{ marginTop: 10, padding: '10px 14px', borderRadius: 10, background: 'var(--surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
           <span style={{ fontSize: 12.5, color: 'var(--ink-2)' }}>Retirable au-delà du filet : <window.PnL value={info.withdrawable} dec={2} style={{ fontWeight: 700 }} /></span>

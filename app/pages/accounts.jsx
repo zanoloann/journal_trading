@@ -40,19 +40,19 @@ function Accounts() {
     const bal = window.accountBalance(a, ctx.trades);
     const pct = (bal - a.size) / a.size * 100;
     const since = window.daysSince(a.lastTrade);
-    const inact = window.inactivityInfo(a, ctx.trades);
-    const inactive = window.isInactive(a, ctx.trades);
     const st = window.computeStats(ctx.trades, a.id);
     const active = ctx.scope === a.id;
+    const health = window.accountHealth(a, ctx.trades);
     const dd = window.drawdownInfo(a, ctx.trades);
     const payoutTarget = (a.hasPayout && a.payoutMinBalance) ? Number(a.payoutMinBalance) : null;
+    const overallVar = health.overall === 'loss' ? 'var(--loss)' : health.overall === 'warn' ? 'var(--warn)' : 'var(--profit)';
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
       <div onClick={() => ctx.setScope(a.id)} className="tj-row"
-        style={{ display: 'grid', gridTemplateColumns: '2.2fr 1fr 1.1fr 1fr 1.1fr auto', gap: 14, alignItems: 'center',
-          padding: '14px 18px', borderRadius: dd && dd.margin <= 0 ? '14px 14px 0 0' : (dd && dd.color !== 'profit' ? '14px 14px 0 0' : 14), cursor: 'pointer',
+        style={{ display: 'grid', gridTemplateColumns: '2.2fr 1fr 1.1fr 1fr auto auto', gap: 14, alignItems: 'center',
+          padding: '14px 18px', borderRadius: health.parts.length ? '14px 14px 0 0' : 14, cursor: 'pointer',
           background: active ? 'var(--surface-2)' : 'var(--surface)',
-          border: '1px solid ' + (active ? 'var(--ink)' : inactive ? 'var(--warn)' : 'var(--border)'), borderBottom: (dd && dd.color !== 'profit') ? 'none' : undefined }}>
+          border: '1px solid ' + (active ? 'var(--ink)' : health.overall !== 'profit' ? overallVar : 'var(--border)'), borderBottom: health.parts.length ? 'none' : undefined }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
           <div style={{ width: 36, height: 36, borderRadius: 10, background: a.color, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', flexShrink: 0 }}>
             <window.Icon name={isMaster ? 'crown' : 'link'} size={17} />
@@ -62,6 +62,7 @@ function Accounts() {
               <span style={{ fontWeight: 700, fontSize: 14.5, whiteSpace: 'nowrap' }}>{a.name}</span>
               {isMaster ? <window.Badge tone="ink" style={{ fontSize: 10 }}>Maître</window.Badge>
                 : <window.Badge tone="info" style={{ fontSize: 10 }}>×{a.coef}</window.Badge>}
+              {a.isEval && <window.Badge tone="info" style={{ fontSize: 10 }}>Éval</window.Badge>}
             </div>
             <div style={{ fontSize: 12, color: 'var(--ink-3)', marginTop: 2 }}>{a.firm}</div>
           </div>
@@ -79,16 +80,18 @@ function Accounts() {
           <div style={{ fontSize: 11, color: 'var(--ink-3)' }}>Perf.</div>
           <window.PnL value={pct} style={{ fontWeight: 700, fontSize: 14 }}>{window.fmtPct(pct)}</window.PnL>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: inact ? (inact.color === 'profit' ? 'var(--profit)' : inact.color === 'warn' ? 'var(--warn)' : 'var(--loss)') : (inactive ? 'var(--warn)' : 'var(--ink-3)') }}>
-          <window.Icon name={inact ? 'calendar' : (inactive ? 'alert' : 'clock')} size={14} />
-          {inact ? (
-            <span style={{ fontSize: 12.5, fontWeight: 700 }} title={'Inactivité dès le ' + window.fmtDateFR(inact.deadline) + ' — min. ' + inact.minDays + ' j à ' + window.fmtMoney(inact.minNet, { signed: false }) + ' net sur ' + inact.windowDays + ' j'}>{window.fmtDateFR(inact.deadline)} · {inact.remaining > 0 ? inact.remaining + ' j' : 'inactif'}</span>
-          ) : (
-            <span style={{ fontSize: 12.5, fontWeight: inactive ? 700 : 500 }}>{since === 0 ? "Auj." : since + 'j'}</span>
-          )}
-          <span style={{ fontSize: 11.5, color: 'var(--ink-3)', marginLeft: 4 }}>· {st.total} tr.</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <window.Badge tone={health.overall === 'loss' ? 'loss' : health.overall === 'warn' ? 'warn' : 'profit'} style={{ fontSize: 10.5 }}>
+            {health.overall === 'loss' ? 'Danger' : health.overall === 'warn' ? 'Attention' : 'Sain'}
+          </window.Badge>
+          <span style={{ fontSize: 11.5, color: 'var(--ink-3)' }}>{st.total} tr. · {since === 0 ? "auj." : since + 'j'}</span>
         </div>
         {actionsFor(a)}
+        {health.parts.length > 0 && (
+          <div style={{ gridColumn: '1 / -1', display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
+            {health.parts.map(p => <HealthChip key={p.key} part={p} />)}
+          </div>
+        )}
         {payoutTarget != null && dd && (
           <div style={{ gridColumn: '1 / -1' }}>
             <MllTargetBar start={a.size} current={bal} mll={dd.threshold} target={payoutTarget} />
@@ -97,6 +100,39 @@ function Accounts() {
       </div>
       <DrawdownAlert a={a} dd={dd} />
       </div>
+    );
+  }
+
+  // One compact chip per health dimension — the "coup d'œil" the mission asks for: drawdown margin,
+  // DLL margin, inactivity status, payout eligibility, eval progress, each colored by severity with
+  // the exact number in a tooltip.
+  function HealthChip({ part }) {
+    const colorVar = part.color === 'loss' ? 'var(--loss)' : part.color === 'warn' ? 'var(--warn)' : part.color === 'profit' ? 'var(--profit)' : 'var(--ink-3)';
+    const bg = part.color === 'loss' ? 'var(--loss-bg)' : part.color === 'warn' ? 'var(--warn-bg)' : part.color === 'profit' ? 'var(--profit-bg)' : 'var(--surface-2)';
+    let text, title;
+    const d = part.detail;
+    if (part.key === 'dd') {
+      // margin can be negative (drawdown breached) — never strip that sign, it's the whole point
+      text = 'Marge ' + window.fmtMoney(d.margin, { dec: 2 });
+      title = 'Seuil ' + window.fmtMoney(d.threshold, { signed: false }) + (d.capped ? ' (figé)' : '');
+    } else if (part.key === 'dll') {
+      text = 'DLL ' + window.fmtMoney(d.margin, { dec: 2 }) + ' / ' + window.fmtMoney(d.amount, { signed: false });
+      title = d.breached ? 'Limite de perte journalière dépassée — séance coupée aujourd\'hui.' : 'Perte du jour : ' + window.fmtMoney(d.todayNet, { dec: 2 });
+    } else if (part.key === 'inact') {
+      text = d.status === 'closed' ? 'Clôturé (inactivité)' : d.status === 'dormant' ? 'Dormant' : 'Actif · ' + d.remaining + ' j';
+      title = 'Dernière journée qualifiante : ' + window.fmtDateFR(d.anchor) + ' · clôture le ' + window.fmtDateFR(d.deadline);
+    } else if (part.key === 'payout') {
+      text = d.eligible ? 'Éligible (~' + window.fmtMoney(d.amountEstimate, { signed: false }) + ')' : d.qualDays + '/' + d.minDays + ' j qualifiants';
+      title = 'Modèle ' + (d.model === 'pctCapped' ? '% plafonné' : 'échelle') + ' · solde ' + window.fmtMoney(d.balance, { signed: false });
+    } else if (part.key === 'eval') {
+      text = 'Éval ' + d.pct.toFixed(0) + '%' + (d.passed ? ' — réussie' : '');
+      title = window.fmtMoney(d.profit, { dec: 2 }) + ' / ' + window.fmtMoney(d.target, { signed: false });
+    }
+    return (
+      <span title={title} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 10px', borderRadius: 999, background: bg, color: colorVar, fontSize: 11.5, fontWeight: 700 }}>
+        <span style={{ width: 6, height: 6, borderRadius: 999, background: colorVar, flexShrink: 0 }} />
+        {part.label} · {text}
+      </span>
     );
   }
 
