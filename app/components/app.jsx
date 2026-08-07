@@ -41,6 +41,9 @@ function ensureUniqueIds(trades) {
   return changed ? out : trades;
 }
 
+// Bump on every code change shipped to the app (shown under the title in the sidebar).
+const APP_VERSION = 'v1.1';
+
 const NAV = [
 { id: 'dashboard', label: 'Tableau de bord', icon: 'dashboard' },
 { id: 'journal', label: 'Journal', icon: 'journal' },
@@ -156,7 +159,7 @@ function Sidebar() {
         </div>
         <div>
           <div style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 16, lineHeight: 1 }}>Journal de Trading</div>
-          <div style={{ fontSize: 11, color: 'var(--ink-3)', marginTop: 2 }}>journal de trading</div>
+          <div style={{ fontSize: 11, color: 'var(--ink-3)', marginTop: 2 }}>{APP_VERSION}</div>
         </div>
       </div>
       <nav style={{ padding: '6px 12px', display: 'flex', flexDirection: 'column', gap: 2, flex: 1 }} data-tour="sidebar">
@@ -461,8 +464,8 @@ function App() {
       return { ...t, accounts: t.accounts.map((l) => l.accountId === accountId ? { ...l, pnl: +Number(newNet).toFixed(2), gross: +(Number(newNet) + l.fees).toFixed(2), manual: true } : l) };
     })),
     addTrades: (list) => setTrades((prev) => { let acc = prev.slice(); const made = list.map((tr) => { const id = newTradeId(acc); const nt = { id, ...tr }; acc = [nt, ...acc]; return nt; }); return sortTradesDesc([...made, ...prev]); }),
-    deleteTrade: (id) => setTrades((prev) => prev.filter((x) => x.id !== id)),
-    deleteTrades: (ids) => setTrades((prev) => prev.filter((x) => !ids.includes(x.id))),
+    deleteTrade: (id) => { window.ghMarkDeleted('trades', [id]); setTrades((prev) => prev.filter((x) => x.id !== id)); },
+    deleteTrades: (ids) => { window.ghMarkDeleted('trades', ids); setTrades((prev) => prev.filter((x) => !ids.includes(x.id))); },
     addAccount: (a) => setAccounts((prev) => [...prev, { ...a, id: 'acc_' + Date.now() }]),
     updateAccount: (id, patch) => setAccounts((prev) => prev.map((a) => a.id === id ? { ...a, ...patch } : a)),
     // Pushes a firm/account-type's full rule set (drawdown, DLL, inactivity, payout, eval fields —
@@ -506,7 +509,13 @@ function App() {
       return a;
     })),
     deleteAccount: (id) => {
-      setTrades((prev) => prev.map((t) => ({ ...t, accounts: t.accounts.filter((l) => l.accountId !== id) })).filter((t) => t.accounts.length));
+      window.ghMarkDeleted('accounts', [id]);
+      setTrades((prev) => {
+        const next = prev.map((t) => ({ ...t, accounts: t.accounts.filter((l) => l.accountId !== id) })).filter((t) => t.accounts.length);
+        const droppedTradeIds = prev.filter((t) => !next.some((n) => n.id === t.id)).map((t) => t.id);
+        window.ghMarkDeleted('trades', droppedTradeIds); // trades left with zero accounts after this deletion
+        return next;
+      });
       setAccounts((prev) => prev.filter((a) => a.id !== id));
       setScope((s) => s === id ? 'all' : s);
     },

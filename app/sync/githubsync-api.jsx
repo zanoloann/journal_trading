@@ -46,10 +46,13 @@ async function ghPutFile(token, owner, repo, path, content, message) {
   });
   if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.message || 'write-' + path); }
 }
-async function ghSyncAll(cfg, accounts, trades, propfirms) {
+async function ghSyncAll(cfg, accounts, trades, propfirms, deleted) {
   const files = window.buildNdjsonFiles(accounts, trades, propfirms);
   for (const f of files) {
     await ghPutFile(cfg.token, cfg.owner, cfg.repo, f.name, f.content, 'Sync journal — ' + new Date().toISOString());
+  }
+  if (deleted) {
+    await ghPutFile(cfg.token, cfg.owner, cfg.repo, 'data/deleted.json', JSON.stringify(deleted, null, 2), 'Sync journal — ' + new Date().toISOString());
   }
 }function b64DecodeUtf8(b64) { return decodeURIComponent(escape(atob(b64.replace(/\n/g, '')))); }
 async function ghGetFile(token, owner, repo, path) {
@@ -80,20 +83,42 @@ async function ghPullAll(cfg) {
   }
   const pfJson = await ghGetFile(cfg.token, cfg.owner, cfg.repo, 'data/propfirms.json');
   const propfirms = pfJson ? JSON.parse(pfJson) : [];
-  return { accounts, trades, propfirms };
+  const delJson = await ghGetFile(cfg.token, cfg.owner, cfg.repo, 'data/deleted.json');
+  const deleted = delJson ? JSON.parse(delJson) : { accounts: [], trades: [] };
+  return { accounts, trades, propfirms, deleted };
+}
+
+// Deletion tombstones (survive across devices/merges) — every account/trade id ever deleted
+// locally is recorded here so a later merge won't resurrect it just because another device (or
+// GitHub itself, if that device synced first) still has the old copy. Read/written straight to
+// localStorage, same self-contained pattern as ghLoadCfg/ghSaveCfg.
+const GH_DELETED_KEY = 'tj_deleted_ids_v1';
+function ghLoadDeleted() {
+  try { const s = localStorage.getItem(GH_DELETED_KEY); if (s) return JSON.parse(s); } catch (e) {}
+  return { accounts: [], trades: [] };
+}
+function ghSaveDeleted(d) { try { localStorage.setItem(GH_DELETED_KEY, JSON.stringify(d)); } catch (e) {} }
+// Called at the moment of deletion (deleteAccount/deleteTrade/deleteTrades in app.jsx) so the
+// tombstone exists locally even before the next GitHub sync picks it up.
+function ghMarkDeleted(kind, ids) {
+  if (!ids || !ids.length) return;
+  const d = ghLoadDeleted();
+  d[kind] = Array.from(new Set([...(d[kind] || []), ...ids]));
+  ghSaveDeleted(d);
 }
 
 // Merge-safe sync: never a blind overwrite in either direction. Pulls whatever is currently on
 // GitHub, unions it with the local data (by id — a trade or account present on either side survives;
 // on an id present on both sides the LOCAL version wins, since it's the one just edited), pushes the
 // merged result back, and returns it so the caller can also update local state. This is what lets two
-// devices add different trades independently without one push erasing the other's addition — the
-// trade-off (deliberate, per user request to never lose data) is that a trade deleted on one device
-// can reappear if another device still has it locally and syncs before pulling that deletion.
-function mergeById(remoteList, localList) {
+// devices add different trades independently without one push erasing the other's addition. Ids
+// recorded as deleted (locally or on another device, unioned via data/deleted.json) are dropped from
+// the union regardless of which side still carries them, so a deletion actually sticks.
+function mergeById(remoteList, localList, deletedIds) {
   const map = new Map();
   (remoteList || []).forEach(item => { if (item && item.id) map.set(item.id, item); });
   (localList || []).forEach(item => { if (item && item.id) map.set(item.id, item); }); // local overrides on shared id
+  (deletedIds || []).forEach(id => map.delete(id));
   return Array.from(map.values());
 }
 // Prop firms have no id, just a name — same local-wins union as mergeById, keyed by name instead.
@@ -104,13 +129,19 @@ function mergeFirmsByName(remoteList, localList) {
   return Array.from(map.values());
 }
 async function ghMergeAndSync(cfg, localAccounts, localTrades, localPropfirms) {
-  let remote = { accounts: [], trades: [], propfirms: [] };
+  let remote = { accounts: [], trades: [], propfirms: [], deleted: { accounts: [], trades: [] } };
   try { remote = await ghPullAll(cfg); } catch (e) {} // repo empty / first sync — nothing to merge yet
-  const accounts = mergeById(remote.accounts, localAccounts);
-  const trades = mergeById(remote.trades, localTrades);
+  const local = ghLoadDeleted();
+  const deleted = {
+    accounts: Array.from(new Set([...(remote.deleted?.accounts || []), ...(local.accounts || [])])),
+    trades: Array.from(new Set([...(remote.deleted?.trades || []), ...(local.trades || [])])),
+  };
+  const accounts = mergeById(remote.accounts, localAccounts, deleted.accounts);
+  const trades = mergeById(remote.trades, localTrades, deleted.trades);
   const propfirms = mergeFirmsByName(remote.propfirms, localPropfirms);
-  await ghSyncAll(cfg, accounts, trades, propfirms);
-  return { accounts, trades, propfirms };
+  await ghSyncAll(cfg, accounts, trades, propfirms, deleted);
+  ghSaveDeleted(deleted); // pick up tombstones recorded on another device too
+  return { accounts, trades, propfirms, deleted };
 }
 
-Object.assign(window, { ghLoadCfg, ghSaveCfg, ghSyncAll, ghPullAll, ghMergeAndSync });
+Object.assign(window, { ghLoadCfg, ghSaveCfg, ghSyncAll, ghPullAll, ghMergeAndSync, ghMarkDeleted, ghLoadDeleted });
