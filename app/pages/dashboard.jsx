@@ -30,7 +30,6 @@ function AccountHealth({ compact }) {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 10, alignItems: 'center' }}>
               <div style={{ minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span title={health.overall === 'loss' ? 'Danger' : health.overall === 'warn' ? 'Attention' : 'Sain'} style={{ width: 8, height: 8, borderRadius: 999, background: healthVar, flexShrink: 0 }} />
                   <window.AccountDot color={a.color} />
                   <span style={{ fontWeight: 600, fontSize: 13.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.name}</span>
                   {a.role === 'master' && <window.Badge tone="ink" style={{ fontSize: 10, padding: '2px 7px' }}>Maître</window.Badge>}
@@ -63,6 +62,12 @@ function AccountHealth({ compact }) {
                 const dd = window.drawdownInfo(a, ctx.trades);
                 if (!dd) return null;
                 const ddVar = dd.color === 'profit' ? 'var(--profit)' : dd.color === 'warn' ? 'var(--warn)' : 'var(--loss)';
+                // Safe margin (comfortably >100% of the DD amount) stays a single quiet line —
+                // the full bar only earns its space when there's actually something to watch, so
+                // a good day doesn't push "Trades récents" off screen for no reason.
+                if (dd.color === 'profit') {
+                  return <div style={{ marginTop: 8, fontSize: 11, color: 'var(--ink-3)' }}>Drawdown : marge {window.fmtMoney(dd.margin, { dec: 0 })} ✓</div>;
+                }
                 const ratio = dd.amount > 0 ? Math.max(0, Math.min(1, dd.margin / dd.amount)) : 0;
                 return (
                   <div style={{ marginTop: 10 }}>
@@ -80,6 +85,9 @@ function AccountHealth({ compact }) {
                 const dll = window.dllInfo(a, ctx.trades);
                 if (!dll) return null;
                 const dllVar = dll.color === 'profit' ? 'var(--profit)' : dll.color === 'warn' ? 'var(--warn)' : 'var(--loss)';
+                if (dll.color === 'profit') {
+                  return <div style={{ marginTop: 4, fontSize: 11, color: 'var(--ink-3)' }}>DLL du jour : marge pleine ✓</div>;
+                }
                 const ratio = dll.amount > 0 ? Math.max(0, Math.min(1, dll.margin / dll.amount)) : 0;
                 return (
                   <div style={{ marginTop: 8 }}>
@@ -195,10 +203,15 @@ function KpiBanner({ scope, compact, trades }) {
     { label: 'Gain moyen', icon: 'arrowUp', value: <window.PnL value={s.avgWin} dec={2} />, sub: <span style={{ color: 'var(--ink-3)' }}>{s.tradeWins} trade{s.tradeWins > 1 ? 's' : ''} gagnant{s.tradeWins > 1 ? 's' : ''}</span> },
     { label: 'Perte moyenne', icon: 'arrowDown', value: <window.PnL value={-s.avgLoss} dec={2} />, sub: <span style={{ color: 'var(--ink-3)' }}>{s.tradeLosses} trade{s.tradeLosses > 1 ? 's' : ''} perdant{s.tradeLosses > 1 ? 's' : ''}</span> },
   ];
+  // Driven by accountHealth() — drawdown, DLL, inactivité, payout, éval, whichever is worst —
+  // not just inactivity. This banner and the "Santé des comptes" panel below it must never
+  // disagree: both read the same aggregate, so a red account there is never "all good" here.
+  const sevOf = (c) => ({ loss: 2, warn: 1 }[c] || 0);
   const attention = ctx.accounts
-    .map(a => ({ a, info: window.inactivityInfo(a, ctx.trades) }))
-    .filter(x => x.info && x.info.remaining <= 15)
-    .sort((p, q) => p.info.remaining - q.info.remaining);
+    .map(a => ({ a, health: window.accountHealth(a, ctx.trades) }))
+    .filter(x => x.health.overall !== 'profit')
+    .sort((p, q) => sevOf(q.health.overall) - sevOf(p.health.overall));
+  const bannerTone = attention.some(x => x.health.overall === 'loss') ? 'var(--loss)' : attention.length ? 'var(--warn)' : 'var(--ink-2)';
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, alignItems: 'stretch' }}>
@@ -209,7 +222,7 @@ function KpiBanner({ scope, compact, trades }) {
         ))}
       </div>
       <window.Card pad={compact ? 16 : 20} hover onClick={() => ctx.nav('accounts')}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 7, color: attention.length ? 'var(--warn)' : 'var(--ink-2)', fontSize: 13, fontWeight: 600 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7, color: bannerTone, fontSize: 13, fontWeight: 600 }}>
           <window.Icon name="alert" size={15} stroke={2} />Comptes méritant une attention
         </div>
         {attention.length === 0 ? (
@@ -219,18 +232,23 @@ function KpiBanner({ scope, compact, trades }) {
           </div>
         ) : (
           <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 7 }}>
-            {attention.map(({ a, info }, idx) => (
-              <div key={a.id} style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto', gap: 8, alignItems: 'center' }}>
-                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-3)', width: 14, fontVariantNumeric: 'tabular-nums' }}>{idx + 1}</span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
-                  <window.AccountDot color={a.color} />
-                  <span style={{ fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.name}</span>
-                </span>
-                <span style={{ fontSize: 12, fontWeight: 700, color: colorVar(info.color), whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 3 }}>
-                  {info.remaining <= 0 ? <><window.Icon name="alert" size={12} />inactif</> : 'reste ' + info.remaining + ' j'}
-                </span>
-              </div>
-            ))}
+            {attention.map(({ a, health }, idx) => {
+              const worst = window.worstHealthPart(health);
+              const worstVar = worst && worst.color === 'loss' ? 'var(--loss)' : 'var(--warn)';
+              return (
+                <div key={a.id} style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto', gap: 8, alignItems: 'center' }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-3)', width: 14, fontVariantNumeric: 'tabular-nums' }}>{idx + 1}</span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+                    <window.AccountDot color={a.color} />
+                    <span style={{ fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.name}</span>
+                  </span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: worstVar, whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 3 }}>
+                    {health.overall === 'loss' && <window.Icon name="alert" size={12} />}
+                    {worst ? worst.label + ' · ' + window.healthPartShort(worst) : ''}
+                  </span>
+                </div>
+              );
+            })}
           </div>
         )}
       </window.Card>

@@ -106,6 +106,7 @@ function Accounts() {
   // One compact chip per health dimension — the "coup d'œil" the mission asks for: drawdown margin,
   // DLL margin, inactivity status, payout eligibility, eval progress, each colored by severity with
   // the exact number in a tooltip.
+  const HEALTH_ICON = { dd: 'stats', dll: 'clock', inact: 'calendar', payout: 'wallet', eval: 'target' };
   function HealthChip({ part }) {
     const colorVar = part.color === 'loss' ? 'var(--loss)' : part.color === 'warn' ? 'var(--warn)' : part.color === 'profit' ? 'var(--profit)' : 'var(--ink-3)';
     const bg = part.color === 'loss' ? 'var(--loss-bg)' : part.color === 'warn' ? 'var(--warn-bg)' : part.color === 'profit' ? 'var(--profit-bg)' : 'var(--surface-2)';
@@ -116,21 +117,21 @@ function Accounts() {
       text = 'Marge ' + window.fmtMoney(d.margin, { dec: 2 });
       title = 'Seuil ' + window.fmtMoney(d.threshold, { signed: false }) + (d.capped ? ' (figé)' : '');
     } else if (part.key === 'dll') {
-      text = 'DLL ' + window.fmtMoney(d.margin, { dec: 2 }) + ' / ' + window.fmtMoney(d.amount, { signed: false });
+      text = window.fmtMoney(d.margin, { dec: 2 }) + ' / ' + window.fmtMoney(d.amount, { signed: false });
       title = d.breached ? 'Limite de perte journalière dépassée — séance coupée aujourd\'hui.' : 'Perte du jour : ' + window.fmtMoney(d.todayNet, { dec: 2 });
     } else if (part.key === 'inact') {
-      text = d.status === 'closed' ? 'Clôturé (inactivité)' : d.status === 'dormant' ? 'Dormant' : 'Actif · ' + d.remaining + ' j';
+      text = d.status === 'closed' ? 'Clôturé' : d.status === 'dormant' ? 'Dormant' : d.remaining + ' j';
       title = 'Dernière journée qualifiante : ' + window.fmtDateFR(d.anchor) + ' · clôture le ' + window.fmtDateFR(d.deadline);
     } else if (part.key === 'payout') {
-      text = d.eligible ? 'Éligible (~' + window.fmtMoney(d.amountEstimate, { signed: false }) + ')' : d.qualDays + '/' + d.minDays + ' j qualifiants';
+      text = d.eligible ? 'Éligible (~' + window.fmtMoney(d.amountEstimate, { signed: false }) + ')' : d.qualDays + '/' + d.minDays + ' j';
       title = 'Modèle ' + (d.model === 'pctCapped' ? '% plafonné' : 'échelle') + ' · solde ' + window.fmtMoney(d.balance, { signed: false });
     } else if (part.key === 'eval') {
-      text = 'Éval ' + d.pct.toFixed(0) + '%' + (d.passed ? ' — réussie' : '');
+      text = d.pct.toFixed(0) + ' %' + (d.passed ? ' — réussie' : '');
       title = window.fmtMoney(d.profit, { dec: 2 }) + ' / ' + window.fmtMoney(d.target, { signed: false });
     }
     return (
       <span title={title} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 10px', borderRadius: 999, background: bg, color: colorVar, fontSize: 11.5, fontWeight: 700 }}>
-        <span style={{ width: 6, height: 6, borderRadius: 999, background: colorVar, flexShrink: 0 }} />
+        <window.Icon name={HEALTH_ICON[part.key] || 'dot'} size={12} stroke={2.4} />
         {part.label} · {text}
       </span>
     );

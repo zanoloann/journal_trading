@@ -471,7 +471,30 @@ function accountHealth(account, trades) {
   if (evalP) parts.push({ key: 'eval', label: 'Évaluation', color: evalP.passed ? 'profit' : (evalP.consistencyOk ? 'neutral' : 'warn'), detail: evalP });
   let overall = 'profit';
   parts.forEach(p => { if ((HEALTH_SEVERITY[p.color] ?? 0) > HEALTH_SEVERITY[overall]) overall = p.color; });
+  // Worst first — every consumer (accounts list, dashboard banner) gets the same reading order
+  // without re-sorting itself, so the most urgent thing is always what's scanned first.
+  parts.sort((a, b) => (HEALTH_SEVERITY[b.color] ?? 0) - (HEALTH_SEVERITY[a.color] ?? 0));
   return { balance, parts, overall };
+}
+
+// The single worst-severity part of a health result — what a compact "why is this account
+// flagged" summary should lead with (dashboard attention banner, etc).
+function worstHealthPart(health) {
+  if (!health || !health.parts.length) return null;
+  return health.parts.reduce((w, p) => (w == null || (HEALTH_SEVERITY[p.color] ?? 0) > (HEALTH_SEVERITY[w.color] ?? 0)) ? p : w, null);
+}
+
+// Compact one-line value for a health part, with no repeated label — shared by every place that
+// renders a health part so the wording never drifts between the accounts list, the dashboard
+// "attention" banner, etc.
+function healthPartShort(part) {
+  const d = part.detail;
+  if (part.key === 'dd') return window.fmtMoney(d.margin, { dec: 0 });
+  if (part.key === 'dll') return d.breached ? 'dépassé' : window.fmtMoney(d.margin, { dec: 0 });
+  if (part.key === 'inact') return d.status === 'closed' ? 'clôturé' : d.status === 'dormant' ? 'dormant' : d.remaining + ' j';
+  if (part.key === 'payout') return d.eligible ? 'éligible' : d.qualDays + '/' + d.minDays + ' j';
+  if (part.key === 'eval') return d.pct.toFixed(0) + ' %';
+  return '';
 }
 
 // ---------------- Demo dataset (shown to brand-new users during the tour) ----------------
@@ -515,5 +538,5 @@ Object.assign(window, {
   DEMO_ACCOUNTS, DEMO_TRADES,
   FEE, REPLAY_ACCOUNT_ID, REPLAY_ACCOUNT, ACCOUNTS, TRADES, INSTRUMENTS, MINDSET_LABEL, buildLegs, refLeg, computeRefAccountId,
   fmtMoney, fmtNum, fmtPct, fmtDateFR, tradePnl, tradeGross, tradeFees, tradeContracts,
-  tradesForScope, computeStats, dailyPnl, equityCurve, tradesInRange, periodRange, PERIOD_LABEL, daysSince, todayDate, todayIso, addDaysIso, daysBetweenIso, inactivityInfo, isInactive, dllInfo, drawdownInfo, accountBalance, peakEquity, accountTradePnl, payoutInfo, evalProgress, accountHealth, isoDate,
+  tradesForScope, computeStats, dailyPnl, equityCurve, tradesInRange, periodRange, PERIOD_LABEL, daysSince, todayDate, todayIso, addDaysIso, daysBetweenIso, inactivityInfo, isInactive, dllInfo, drawdownInfo, accountBalance, peakEquity, accountTradePnl, payoutInfo, evalProgress, accountHealth, worstHealthPart, healthPartShort, isoDate,
 });
