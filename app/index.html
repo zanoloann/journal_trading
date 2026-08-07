@@ -6,17 +6,18 @@
 <title>Ledger — Journal de trading</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Lora:wght@400;600&family=Space+Grotesk:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
 <style>
   :root {
-    --bg: #f6f5f1;
-    --surface: #ffffff;
-    --surface-2: #f3f1ec;
-    --border: #e7e3da;
-    --border-strong: #d8d3c8;
-    --ink: #1b1a17;
-    --ink-2: #6d685e;
-    --ink-3: #a39d92;
+    /* Classical design system — see readme/theme.json of the "Classical" Claude Design project */
+    --bg: #f3f2f2;
+    --surface: #f8f4f4;
+    --surface-2: #eae9e9;
+    --border: #d7d3d3;
+    --border-strong: #bab6b6;
+    --ink: #201f1d;
+    --ink-2: #605d5d;
+    --ink-3: #9b9797;
     --profit: #1f8a5b;
     --profit-bg: #e6f3ec;
     --loss: #d4504e;
@@ -28,14 +29,14 @@
     --gold-ink: #8a6a08;
     --info: #2a6fdb;
     --info-bg: #eaf0fb;
-    --accent: #1f8a5b;
-    --font-display: "Space Grotesk", sans-serif;
+    --accent: #b68235;
+    --font-display: "Cormorant Garamond", serif;
     --font-mono: "IBM Plex Mono", monospace;
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; }
   body {
-    font-family: "Manrope", -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: "Lora", -apple-system, BlinkMacSystemFont, serif;
     background: var(--bg);
     color: var(--ink);
     -webkit-font-smoothing: antialiased;
@@ -113,9 +114,9 @@
 <body>
 <template id="__bundler_thumbnail">
 <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-  <rect width="100" height="100" fill="#1b1a17"/>
-  <polyline points="20,68 38,52 52,60 80,30" fill="none" stroke="#1f8a5b" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
-  <circle cx="80" cy="30" r="6" fill="#1f8a5b"/>
+  <rect width="100" height="100" fill="#201f1d"/>
+  <polyline points="20,68 38,52 52,60 80,30" fill="none" stroke="#b68235" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="80" cy="30" r="6" fill="#b68235"/>
 </svg>
 </template>
 <div id="root"></div>

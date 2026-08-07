@@ -56,8 +56,8 @@ const TITLES = {
 
 const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
   "dashLayout": "overview",
-  "accent": "#1f8a5b",
-  "font": "Space Grotesk",
+  "accent": "#b68235",
+  "font": "Cormorant Garamond",
   "density": "regular",
   "blurAmounts": true
 } /*EDITMODE-END*/;
@@ -566,7 +566,7 @@ function App() {
     confirm: (opts) => setConfirm(opts)
   };
 
-  const fontStack = '"' + (t.font || 'Space Grotesk') + '", "Manrope", sans-serif';
+  const fontStack = '"' + (t.font || 'Cormorant Garamond') + '", "Lora", serif';
   const dens = t.density === 'compact' ? 22 : t.density === 'comfy' ? 40 : 30;
 
 
@@ -623,8 +623,8 @@ function App() {
           <window.TweakSection label="Tableau de bord" />
           <window.TweakRadio label="Disposition" value={t.dashLayout} options={[{ value: 'overview', label: 'Vue d\'ensemble' }, { value: 'compact', label: 'Compact' }, { value: 'accounts', label: 'Par compte' }]} onChange={(v) => setTweak('dashLayout', v)} />
           <window.TweakSection label="Apparence" />
-          <window.TweakColor label="Couleur d'accent" value={t.accent} options={['#1f8a5b', '#2a6fdb', '#d97757', '#9b6dff']} onChange={(v) => setTweak('accent', v)} />
-          <window.TweakSelect label="Police d'affichage" value={t.font} options={['Space Grotesk', 'Manrope', 'IBM Plex Mono']} onChange={(v) => setTweak('font', v)} />
+          <window.TweakColor label="Couleur d'accent" value={t.accent} options={['#b68235', '#1f8a5b', '#2a6fdb', '#d97757']} onChange={(v) => setTweak('accent', v)} />
+          <window.TweakSelect label="Police d'affichage" value={t.font} options={['Cormorant Garamond', 'Space Grotesk', 'Manrope', 'IBM Plex Mono']} onChange={(v) => setTweak('font', v)} />
           <window.TweakRadio label="Densité" value={t.density} options={['compact', 'regular', 'comfy']} onChange={(v) => setTweak('density', v)} />
           <window.TweakToggle label="Masquer (flouter) les montants par compte" value={t.blurAmounts} onChange={(v) => setTweak('blurAmounts', v)} />
           <window.TweakSection label="Données" />
