@@ -516,7 +516,15 @@ function App() {
         window.ghMarkDeleted('trades', droppedTradeIds); // trades left with zero accounts after this deletion
         return next;
       });
-      setAccounts((prev) => prev.filter((a) => a.id !== id));
+      setAccounts((prev) => {
+        const wasMaster = prev.find((a) => a.id === id)?.role === 'master';
+        const remaining = prev.filter((a) => a.id !== id);
+        if (!wasMaster || !remaining.length) return remaining;
+        // promote the next account in line so the app is never left without a master —
+        // same normalization setMaster() applies (coef 1, both instruments)
+        const nextMasterId = remaining[0].id;
+        return remaining.map((a) => a.id === nextMasterId ? { ...a, role: 'master', coef: 1, instrument: 'MES+ES' } : a);
+      });
       setScope((s) => s === id ? 'all' : s);
     },
     resetDemo: () => {
