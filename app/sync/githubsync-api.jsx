@@ -38,13 +38,21 @@ async function ghGetSha(token, owner, repo, path) {
   return j.sha || null;
 }
 function b64EncodeUtf8(str) { return btoa(unescape(encodeURIComponent(str))); }
-async function ghPutFile(token, owner, repo, path, content, message) {
+// A 409 here means the file's sha changed between our GET and our PUT — another sync (another tab,
+// device, or an overlapping call of our own) wrote to the same path in between. Refetching the sha
+// and retrying once resolves it as long as the two writers agree on content (they do: both are
+// derived from the same merge-by-id logic, so the retry's PUT is redundant with, not conflicting
+// with, whatever just landed).
+async function ghPutFile(token, owner, repo, path, content, message, _retried) {
   const sha = await ghGetSha(token, owner, repo, path);
   const res = await fetch('https://api.github.com/repos/' + owner + '/' + repo + '/contents/' + path, {
     method: 'PUT', headers: { ...ghHeaders(token), 'Content-Type': 'application/json' },
     body: JSON.stringify({ message, content: b64EncodeUtf8(content), sha: sha || undefined }),
   });
-  if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.message || 'write-' + path); }
+  if (!res.ok) {
+    if (res.status === 409 && !_retried) return ghPutFile(token, owner, repo, path, content, message, true);
+    const e = await res.json().catch(() => ({})); throw new Error(e.message || 'write-' + path);
+  }
 }
 async function ghSyncAll(cfg, accounts, trades, propfirms, deleted) {
   const files = window.buildNdjsonFiles(accounts, trades, propfirms);
@@ -128,7 +136,7 @@ function mergeFirmsByName(remoteList, localList) {
   (localList || []).forEach(f => { if (f && f.name) map.set(f.name.toLowerCase(), f); });
   return Array.from(map.values());
 }
-async function ghMergeAndSync(cfg, localAccounts, localTrades, localPropfirms) {
+async function ghMergeAndSyncImpl(cfg, localAccounts, localTrades, localPropfirms) {
   let remote = { accounts: [], trades: [], propfirms: [], deleted: { accounts: [], trades: [] } };
   try { remote = await ghPullAll(cfg); } catch (e) {} // repo empty / first sync — nothing to merge yet
   const local = ghLoadDeleted();
@@ -140,8 +148,35 @@ async function ghMergeAndSync(cfg, localAccounts, localTrades, localPropfirms) {
   const trades = mergeById(remote.trades, localTrades, deleted.trades);
   const propfirms = mergeFirmsByName(remote.propfirms, localPropfirms);
   await ghSyncAll(cfg, accounts, trades, propfirms, deleted);
-  ghSaveDeleted(deleted); // pick up tombstones recorded on another device too
+  // Re-read localStorage rather than reusing `deleted`: this function awaits several network
+  // round-trips, and a delete clicked mid-flight (ghMarkDeleted, called synchronously and
+  // immediately) can land in localStorage while this call is still in the air. Overwriting with
+  // the snapshot captured at the top would silently drop that tombstone — which is exactly how one
+  // of two same-session deletions can end up surviving while the other keeps coming back. A later
+  // sync cycle still picks up whatever remote doesn't have yet, so merging here (never regressing)
+  // is enough; it doesn't need to also re-push in the same call.
+  const freshLocal = ghLoadDeleted();
+  ghSaveDeleted({
+    accounts: Array.from(new Set([...(deleted.accounts || []), ...(freshLocal.accounts || [])])),
+    trades: Array.from(new Set([...(deleted.trades || []), ...(freshLocal.trades || [])])),
+  });
   return { accounts, trades, propfirms, deleted };
+}
+// Every call site (auto-pull on load, the debounced auto-push, and the three manual buttons in the
+// settings panel) can fire independently and land within moments of each other — e.g. deleting an
+// account arms the debounced push, and clicking "Récupérer les nouveautés" right after starts a
+// second merge before the first is done. Two concurrent merges each PUT the same GitHub files
+// (accounts.json, trade months, deleted.json) with a sha fetched before their own write, so the
+// second writer's sha is stale by the time it lands — GitHub rejects it with a 409 ("is at X but
+// expected Y"), which is the error this queue exists to prevent. Chaining every call onto one
+// promise (continuing past a rejection so one failure can't wedge the queue) makes them run
+// strictly one at a time instead of interleaving their writes.
+let ghSyncQueue = Promise.resolve();
+function ghMergeAndSync(cfg, localAccounts, localTrades, localPropfirms) {
+  const run = () => ghMergeAndSyncImpl(cfg, localAccounts, localTrades, localPropfirms);
+  const result = ghSyncQueue.then(run, run);
+  ghSyncQueue = result.then(() => {}, () => {});
+  return result;
 }
 
 Object.assign(window, { ghLoadCfg, ghSaveCfg, ghSyncAll, ghPullAll, ghMergeAndSync, ghMarkDeleted, ghLoadDeleted });
