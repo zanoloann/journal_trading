@@ -49,32 +49,5 @@
     "ddStop": 52100,
     "opened": "2026-03-11",
     "lastTrade": "2026-06-09"
-  },
-  {
-    "id": "acc_1781877522257",
-    "name": "Lucid récupéré 5 (à vérifier)",
-    "firm": "Lucid",
-    "accountTypeId": "lucid_25_funded",
-    "role": "slave",
-    "coef": 1,
-    "status": "funded",
-    "instrument": "MES",
-    "color": "#b9802a",
-    "opened": "2026-07-17",
-    "lastTrade": "2026-07-24",
-    "size": 25000,
-    "ddType": "trailing",
-    "ddAmount": 1000,
-    "hasDll": false,
-    "hasInactivity": false,
-    "hasPayout": true,
-    "payoutModel": "pctCapped",
-    "payoutMinDays": 5,
-    "payoutMinNet": 100,
-    "payoutPct": 50,
-    "payoutCap": 1000,
-    "requireOverallProfit": true,
-    "maxPayouts": 5,
-    "payoutSplit": 90
   }
 ]
