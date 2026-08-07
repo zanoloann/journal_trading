@@ -278,6 +278,14 @@ function App() {
   }, [trades, accounts, sync.connected, sync.autoOn]);
 
   // auto-push to GitHub (debounced a few seconds after the last change), independent of the Drive/Dropbox sync above
+  // pfTick bumps whenever a prop-firm rule is edited in Settings, so that change also triggers a push
+  // (propfirms has no React state of its own — it lives in the propfirms.jsx module + its own localStorage key)
+  const [pfTick, setPfTick] = useStateApp(0);
+  useEffectApp(() => {
+    const onChange = () => setPfTick((n) => n + 1);
+    window.addEventListener('tj:propfirms-changed', onChange);
+    return () => window.removeEventListener('tj:propfirms-changed', onChange);
+  }, []);
   const ghDebounce = useRefApp(null);
   const ghSkipFirst = useRefApp(true);
   useEffectApp(() => {
@@ -286,13 +294,14 @@ function App() {
     if (!cfg.connected || !cfg.autoOn) return;
     if (ghDebounce.current) clearTimeout(ghDebounce.current);
     ghDebounce.current = setTimeout(() => {
-      window.ghMergeAndSync(cfg, accounts, trades).then(({ accounts: ma, trades: mt }) => {
+      window.ghMergeAndSync(cfg, accounts, trades, window.getPropfirms()).then(({ accounts: ma, trades: mt, propfirms: mp }) => {
         window.ghSaveCfg({ ...cfg, lastSync: new Date().toISOString() });
         if (ma.length !== accounts.length || mt.length !== trades.length) { setAccounts(ma); setTrades(sortTradesDesc(ensureUniqueIds(mt))); } // pick up additions made on another device
+        window.replacePropfirms(mp); // pick up rule edits made on another device
       }).catch(() => {});
     }, 4000);
     return () => { if (ghDebounce.current) clearTimeout(ghDebounce.current); };
-  }, [trades, accounts]);
+  }, [trades, accounts, pfTick]);
 
 
   // persist on every change — localStorage stays authoritative for this session; IndexedDB mirrors
@@ -329,9 +338,10 @@ function App() {
     ghAutoPullRef.current = true;
     const cfg = window.ghLoadCfg();
     if (!cfg.connected) return;
-    window.ghMergeAndSync(cfg, accounts, trades).then(({ accounts: ma, trades: mt }) => {
+    window.ghMergeAndSync(cfg, accounts, trades, window.getPropfirms()).then(({ accounts: ma, trades: mt, propfirms: mp }) => {
       setAccounts(ma);
       setTrades(sortTradesDesc(ensureUniqueIds(mt)));
+      window.replacePropfirms(mp);
       window.ghSaveCfg({ ...cfg, lastSync: new Date().toISOString() });
     }).catch(() => {}); // stay on local data if unreachable (offline, token revoked, …)
   }, []);
@@ -415,6 +425,23 @@ function App() {
       return next;
     });
     saveLS('tj_migrate_propfirm_v1', true);
+  }, []);
+
+  // one-time fix: Apex 50K Legacy's inactivity rule was entered wrong (30j close, matching the
+  // EOD variant) — the real rule is 150$ net sur 180j glissants. Accounts created before the fix
+  // had that wrong 30j value copied onto them at account-creation time (rules are a flat spread,
+  // not a live reference to the firm config — see applyType() in modals-account.jsx), so correcting
+  // config/propfirms.jsx alone doesn't reach accounts that already exist. Re-syncs only the
+  // inactivity fields, from the account's own accountTypeId, leaving balance/trades/name untouched.
+  useEffectApp(() => {
+    if (loadLS('tj_migrate_inact_legacy_v1', false)) return;
+    setAccounts((prev) => prev.map((a) => {
+      if (a.accountTypeId !== 'apex_50_legacy' || !a.hasInactivity) return a;
+      const t = (window.firmAccountTypes('Apex') || []).find((x) => x.id === 'apex_50_legacy');
+      if (!t) return a;
+      return { ...a, inactMinNet: t.inactMinNet, inactMinQualDays: t.inactMinQualDays, inactWindow: t.inactWindow, inactCloseDays: t.inactCloseDays, inactDormantDays: t.inactDormantDays ?? null };
+    }));
+    saveLS('tj_migrate_inact_legacy_v1', true);
   }, []);
 
   const ctx = {

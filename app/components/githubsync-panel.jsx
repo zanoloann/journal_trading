@@ -17,8 +17,9 @@ function GithubSyncPanel() {
       const next = { token: tokenInput, owner: me.login, repo: repo.name, connected: true, lastSync: null };
       setCfg(next);
       try {
-        const { accounts: ma, trades: mt } = await window.ghMergeAndSync(next, ctx.accounts, ctx.trades);
+        const { accounts: ma, trades: mt, propfirms: mp } = await window.ghMergeAndSync(next, ctx.accounts, ctx.trades, window.getPropfirms());
         ctx.restoreBackup(ma, mt); // merge-safe: union of local + remote, never a deletion
+        window.replacePropfirms(mp);
         setCfg({ ...next, lastSync: new Date().toISOString() });
       } catch (e) {} // repo may be empty/unreachable on first connect — local data stays as-is
     } catch (e) { setError(e.message === 'auth' ? 'Token invalide ou expiré.' : e.message === 'not-found' ? 'Repo introuvable sous ce compte — vérifie le nom.' : (e.message || 'Échec de la connexion.')); }
@@ -36,9 +37,10 @@ function GithubSyncPanel() {
   async function doSyncNow() {
     setError(null); setBusy(true);
     try {
-      const { accounts: ma, trades: mt } = await window.ghMergeAndSync(cfg, ctx.accounts, ctx.trades);
+      const { accounts: ma, trades: mt, propfirms: mp } = await window.ghMergeAndSync(cfg, ctx.accounts, ctx.trades, window.getPropfirms());
       setCfg({ lastSync: new Date().toISOString() });
       if (ma.length !== ctx.accounts.length || mt.length !== ctx.trades.length) ctx.restoreBackup(ma, mt); // pick up additions synced from another device
+      window.replacePropfirms(mp);
     }
     catch (e) { setError('Échec de la synchro (' + e.message + ').'); }
     setBusy(false);
@@ -46,9 +48,10 @@ function GithubSyncPanel() {
   async function doPullNow() {
     setError(null); setBusy(true);
     try {
-      const { accounts: ma, trades: mt } = await window.ghMergeAndSync(cfg, ctx.accounts, ctx.trades);
+      const { accounts: ma, trades: mt, propfirms: mp } = await window.ghMergeAndSync(cfg, ctx.accounts, ctx.trades, window.getPropfirms());
       setCfg({ lastSync: new Date().toISOString() });
       ctx.restoreBackup(ma, mt); // merge-safe: union with local, never deletes
+      window.replacePropfirms(mp);
       ctx.nav('dashboard');
     } catch (e) { setError(e.message === 'no-data' ? 'Aucune donnée trouvée dans ce repo.' : ('Échec du chargement (' + e.message + ').')); }
     setBusy(false);

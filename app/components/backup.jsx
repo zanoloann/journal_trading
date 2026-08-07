@@ -74,13 +74,14 @@ function buildZip(files) {
   return new Blob([...chunks, ...central, new Uint8Array(end.buffer)], { type: 'application/zip' });
 }
 // Convert current accounts + trades into the NDJSON repo structure (data/accounts.json + data/trades/YYYY-MM.ndjson)
-function buildNdjsonFiles(accounts, trades) {
+function buildNdjsonFiles(accounts, trades, propfirms) {
   const byMonth = {};
   trades.forEach(t => {
     const month = (t.date || '').slice(0, 7) || 'sans-date';
     (byMonth[month] = byMonth[month] || []).push(t);
   });
   const files = [{ name: 'data/accounts.json', content: JSON.stringify(accounts, null, 2) }];
+  if (propfirms) files.push({ name: 'data/propfirms.json', content: JSON.stringify(propfirms, null, 2) });
   Object.keys(byMonth).sort().forEach(month => {
     const lines = byMonth[month].slice().sort((a, b) => (a.date || '').localeCompare(b.date || '')).map(t => JSON.stringify(t));
     files.push({ name: 'data/trades/' + month + '.ndjson', content: lines.join('\n') + '\n' });
@@ -184,7 +185,7 @@ function BackupModal({ onClose }) {
               Télécharge un <code style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>.zip</code> avec <code style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>data/accounts.json</code> et un fichier <code style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>data/trades/AAAA-MM.ndjson</code> par mois (un trade = une ligne) — la structure prévue pour la synchro GitHub à venir. N'affecte pas vos données actuelles.
             </p>
             <window.Button variant="secondary" icon="arrowDown" onClick={() => {
-              const zip = buildZip(buildNdjsonFiles(ctx.accounts, ctx.trades));
+              const zip = buildZip(buildNdjsonFiles(ctx.accounts, ctx.trades, window.getPropfirms()));
               const url = URL.createObjectURL(zip);
               const a = document.createElement('a');
               a.href = url; a.download = 'trading-journal-ndjson.zip'; a.click();

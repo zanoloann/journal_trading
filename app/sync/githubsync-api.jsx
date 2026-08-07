@@ -46,8 +46,8 @@ async function ghPutFile(token, owner, repo, path, content, message) {
   });
   if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.message || 'write-' + path); }
 }
-async function ghSyncAll(cfg, accounts, trades) {
-  const files = window.buildNdjsonFiles(accounts, trades);
+async function ghSyncAll(cfg, accounts, trades, propfirms) {
+  const files = window.buildNdjsonFiles(accounts, trades, propfirms);
   for (const f of files) {
     await ghPutFile(cfg.token, cfg.owner, cfg.repo, f.name, f.content, 'Sync journal — ' + new Date().toISOString());
   }
@@ -65,7 +65,8 @@ async function ghListDir(token, owner, repo, path) {
   if (!res.ok) throw new Error('list-' + path);
   return res.json();
 }
-// Pull data/accounts.json + all data/trades/*.ndjson from the repo, rebuild the in-app shape.
+// Pull data/accounts.json + all data/trades/*.ndjson + data/propfirms.json from the repo, rebuild
+// the in-app shape. propfirms.json is optional (older repos / first sync won't have it yet).
 async function ghPullAll(cfg) {
   const accJson = await ghGetFile(cfg.token, cfg.owner, cfg.repo, 'data/accounts.json');
   if (accJson === null) throw new Error('no-data');
@@ -77,7 +78,9 @@ async function ghPullAll(cfg) {
     if (!content) continue;
     content.split('\n').forEach(line => { const t = line.trim(); if (t) trades.push(JSON.parse(t)); });
   }
-  return { accounts, trades };
+  const pfJson = await ghGetFile(cfg.token, cfg.owner, cfg.repo, 'data/propfirms.json');
+  const propfirms = pfJson ? JSON.parse(pfJson) : [];
+  return { accounts, trades, propfirms };
 }
 
 // Merge-safe sync: never a blind overwrite in either direction. Pulls whatever is currently on
@@ -93,13 +96,21 @@ function mergeById(remoteList, localList) {
   (localList || []).forEach(item => { if (item && item.id) map.set(item.id, item); }); // local overrides on shared id
   return Array.from(map.values());
 }
-async function ghMergeAndSync(cfg, localAccounts, localTrades) {
-  let remote = { accounts: [], trades: [] };
+// Prop firms have no id, just a name — same local-wins union as mergeById, keyed by name instead.
+function mergeFirmsByName(remoteList, localList) {
+  const map = new Map();
+  (remoteList || []).forEach(f => { if (f && f.name) map.set(f.name.toLowerCase(), f); });
+  (localList || []).forEach(f => { if (f && f.name) map.set(f.name.toLowerCase(), f); });
+  return Array.from(map.values());
+}
+async function ghMergeAndSync(cfg, localAccounts, localTrades, localPropfirms) {
+  let remote = { accounts: [], trades: [], propfirms: [] };
   try { remote = await ghPullAll(cfg); } catch (e) {} // repo empty / first sync — nothing to merge yet
   const accounts = mergeById(remote.accounts, localAccounts);
   const trades = mergeById(remote.trades, localTrades);
-  await ghSyncAll(cfg, accounts, trades);
-  return { accounts, trades };
+  const propfirms = mergeFirmsByName(remote.propfirms, localPropfirms);
+  await ghSyncAll(cfg, accounts, trades, propfirms);
+  return { accounts, trades, propfirms };
 }
 
 Object.assign(window, { ghLoadCfg, ghSaveCfg, ghSyncAll, ghPullAll, ghMergeAndSync });

@@ -19,7 +19,7 @@ const DEFAULT_PROPFIRMS = [
     { id: 'apex_50_legacy', label: '50K Legacy (avant 01/03/2026)', size: 50000,
       ddType: 'trailing', ddAmount: 2500,
       hasDll: false,
-      hasInactivity: true, inactMinNet: 150, inactMinQualDays: 1, inactWindow: 30, inactCloseDays: 30,
+      hasInactivity: true, inactMinNet: 150, inactMinQualDays: 1, inactWindow: 180, inactCloseDays: 180,
       hasPayout: true, payoutModel: 'scale',
       payoutMinDays: 5, payoutMinTradingDays: 8, payoutMinNet: 50, consistencyPct: 30,
       safetyNet: 2600, safetyNetMaxPayouts: 3, payoutMinBalance: 52600,
@@ -75,7 +75,17 @@ function loadPropfirms() {
 }
 
 let PROPFIRMS = loadPropfirms();
-function savePropfirms() { try { localStorage.setItem(PF_LS, JSON.stringify(PROPFIRMS)); } catch (e) {} }
+// dispatched on every local mutation so app.jsx can debounce a GitHub push, same as trades/accounts
+function savePropfirms() {
+  try { localStorage.setItem(PF_LS, JSON.stringify(PROPFIRMS)); } catch (e) {}
+  try { window.dispatchEvent(new Event('tj:propfirms-changed')); } catch (e) {}
+}
+// overwrite the in-memory + localStorage copy from a merged remote result (GitHub pull), without
+// dispatching the change event — this IS the synced state, not a new local edit to push again.
+function replacePropfirms(list) {
+  PROPFIRMS = (list || []).map(f => ({ name: f.name, fees: { ...f.fees }, accountTypes: (f.accountTypes || []).map(t => ({ ...t })) }));
+  try { localStorage.setItem(PF_LS, JSON.stringify(PROPFIRMS)); } catch (e) {}
+}
 function listPropfirms() { return PROPFIRMS.map(f => f.name); }
 function getPropfirms() { return PROPFIRMS.map(f => ({ name: f.name, fees: { ...f.fees }, accountTypes: (f.accountTypes || []).map(t => ({ ...t })) })); }
 function findFirm(name) { return PROPFIRMS.find(f => f.name.toLowerCase() === String(name || '').toLowerCase()); }
@@ -115,6 +125,6 @@ function setFirmAccountTypes(name, types) {
 function firmAccountTypes(name) { const f = findFirm(name); return f ? (f.accountTypes || []) : []; }
 
 Object.assign(window, {
-  PROPFIRMS, loadPropfirms, listPropfirms, getPropfirms, findFirm, isDefaultFirm,
+  PROPFIRMS, loadPropfirms, listPropfirms, getPropfirms, replacePropfirms, findFirm, isDefaultFirm,
   feeFor, accountFee, addPropfirm, setFirmFee, removePropfirm, setFirmAccountTypes, firmAccountTypes,
 });
