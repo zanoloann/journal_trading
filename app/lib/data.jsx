@@ -20,14 +20,24 @@ function mulberry32(a) {
 }
 
 // Three 50k accounts — master + two slaves (coef 1), all receive the same trades.
+// Seed ids are generated (not hardcoded) so a brand-new/empty session can never collide, by id,
+// with a real account synced from another device — a hardcoded 'acc_master' here once let an
+// empty browser's freshly-seeded demo account overwrite a real, already-configured Apex account
+// sharing that same id, because the GitHub merge (mergeById in githubsync-api.jsx) makes local win
+// on a shared id. This only matters before the very first save (loadLS falls back to ACCOUNTS only
+// when tj_accounts_v5 doesn't exist yet); once saved, the persisted ids are stable across reloads.
+const SEED_STAMP = Date.now().toString(36);
+const SEED_MASTER_ID = 'acc_seed_' + SEED_STAMP + '_m';
+const SEED_2_ID = 'acc_seed_' + SEED_STAMP + '_2';
+const SEED_3_ID = 'acc_seed_' + SEED_STAMP + '_3';
 const ACCOUNTS = [
-  { id: 'acc_master', name: 'Compte 1 — Maître', firm: '', size: 50000,
+  { id: SEED_MASTER_ID, name: 'Compte 1 — Maître', firm: '', size: 50000,
     role: 'master', coef: 1, status: 'funded', instrument: 'MES+ES', color: '#1b1a17',
     eod: 2000, ddType: 'trailing', ddAmount: 2000, ddStop: 52100, opened: '2026-03-11', lastTrade: '2026-06-09' },
-  { id: 'acc_2', name: 'Compte 2', firm: '', size: 50000,
+  { id: SEED_2_ID, name: 'Compte 2', firm: '', size: 50000,
     role: 'slave', coef: 1, status: 'funded', instrument: 'MES+ES', color: '#1f8a5b',
     eod: 2000, ddType: 'trailing', ddAmount: 2000, ddStop: 52100, opened: '2026-03-11', lastTrade: '2026-06-09' },
-  { id: 'acc_3', name: 'Compte 3', firm: '', size: 50000,
+  { id: SEED_3_ID, name: 'Compte 3', firm: '', size: 50000,
     role: 'slave', coef: 1, status: 'funded', instrument: 'MES+ES', color: '#2a6fdb',
     eod: 2000, ddType: 'trailing', ddAmount: 2000, ddStop: 52100, opened: '2026-03-11', lastTrade: '2026-06-09' },
 ];
@@ -87,7 +97,7 @@ function slavesOpenOn(date) {
 function generateTrades() {
   const trades = RAW_MASTER_TRADES.map((row, i) => {
     const [gross, date, contracts] = row;
-    const ids = ['acc_master'].concat(slavesOpenOn(date));
+    const ids = [SEED_MASTER_ID].concat(slavesOpenOn(date));
     return {
       id: 'T' + pad(i + 1), symbol: 'MES', contracts,
       date, gross, mindset: 2, notes: '',
