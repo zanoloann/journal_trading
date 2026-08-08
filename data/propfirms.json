@@ -54,7 +54,7 @@
         "inactMinQualDays": 1,
         "inactWindow": 180,
         "inactDormantDays": "",
-        "inactCloseDays": 30,
+        "inactCloseDays": 180,
         "hasPayout": false,
         "payoutModel": "scale",
         "payoutMinDays": 5,
