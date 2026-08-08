@@ -52,7 +52,7 @@
         "hasInactivity": true,
         "inactMinNet": 150,
         "inactMinQualDays": 1,
-        "inactWindow": 30,
+        "inactWindow": 180,
         "inactDormantDays": "",
         "inactCloseDays": 30,
         "hasPayout": false,
