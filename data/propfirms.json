@@ -51,7 +51,7 @@
         "dllAmount": 1000,
         "hasInactivity": true,
         "inactMinNet": 50,
-        "inactMinQualDays": 2,
+        "inactMinQualDays": 1,
         "inactWindow": 30,
         "inactDormantDays": "",
         "inactCloseDays": 30,
