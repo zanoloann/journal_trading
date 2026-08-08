@@ -37,7 +37,7 @@
     "dllAmount": 1000,
     "inactMinQualDays": 1,
     "inactDormantDays": "",
-    "inactCloseDays": 30,
+    "inactCloseDays": 180,
     "payoutModel": "scale",
     "payoutMinTradingDays": "",
     "payoutCapExpires": false,
