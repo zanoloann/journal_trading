@@ -180,7 +180,7 @@ function ImportModal({ onClose, initialText }) {
 
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(20,20,18,.42)', backdropFilter: 'blur(3px)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '5vh 20px', overflowY: 'auto' }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: 18, width: '100%', maxWidth: 760, boxShadow: '0 24px 70px -20px rgba(20,20,18,.45)', border: '1px solid var(--border)' }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: 7, width: '100%', maxWidth: 760, boxShadow: '0 24px 70px -20px rgba(20,20,18,.45)', border: '1px solid var(--border)' }}>
         <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
           <div>
             <h2 style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 600 }}>Importer des trades (CSV)</h2>
@@ -193,7 +193,7 @@ function ImportModal({ onClose, initialText }) {
           <div style={{ marginBottom: 16 }}>
             <label style={{ display: 'block', fontSize: 11.5, fontWeight: 600, color: 'var(--ink-2)', marginBottom: 6 }}>Compte de référence pour cet import</label>
             <select value={refId || ''} onChange={e => selectRef(e.target.value)}
-              style={{ width: '100%', padding: '9px 12px', border: '1px solid var(--border)', borderRadius: 10, fontSize: 13.5, background: 'var(--surface-2)', color: 'var(--ink)' }}>
+              style={{ width: '100%', padding: '9px 12px', border: '1px solid var(--border)', borderRadius: 4, fontSize: 13.5, background: 'var(--surface-2)', color: 'var(--ink)' }}>
               {ctx.accounts.map(a => <option key={a.id} value={a.id}>{a.name}{a.role === 'master' ? ' (Maître)' : ' · ×' + a.coef}</option>)}
             </select>
             <div style={{ fontSize: 11.5, color: 'var(--ink-3)', marginTop: 5 }}>Les montants du fichier sont appliqués tels quels à ce compte ; les autres comptes cochés sont recalculés selon leur coefficient relatif.</div>
@@ -213,9 +213,9 @@ function ImportModal({ onClose, initialText }) {
                 const isRef = refAcc && a.id === refAcc.id;
                 const on = !!applied[a.id];
                 return (
-                  <div key={a.id} style={{ display: 'grid', gridTemplateColumns: '28px 1fr auto', gap: 12, alignItems: 'center', padding: '10px 14px', borderRadius: 11, border: '1px solid ' + (on ? 'var(--ink)' : 'var(--border)'), background: on ? 'var(--surface)' : 'var(--surface-2)', opacity: on ? 1 : .65 }}>
+                  <div key={a.id} style={{ display: 'grid', gridTemplateColumns: '28px 1fr auto', gap: 12, alignItems: 'center', padding: '10px 14px', borderRadius: 4, border: '1px solid ' + (on ? 'var(--ink)' : 'var(--border)'), background: on ? 'var(--surface)' : 'var(--surface-2)', opacity: on ? 1 : .65 }}>
                     <button onClick={() => toggleApplied(a.id)} disabled={isRef}
-                      style={{ width: 22, height: 22, borderRadius: 7, border: '1.5px solid ' + (on ? 'var(--ink)' : 'var(--border-strong)'), background: on ? 'var(--ink)' : 'transparent', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: isRef ? 'default' : 'pointer' }}>
+                      style={{ width: 22, height: 22, borderRadius: 4, border: '1.5px solid ' + (on ? 'var(--ink)' : 'var(--border-strong)'), background: on ? 'var(--ink)' : 'transparent', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: isRef ? 'default' : 'pointer' }}>
                       {on && <window.Icon name="check" size={14} stroke={3} />}
                     </button>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
@@ -236,13 +236,13 @@ function ImportModal({ onClose, initialText }) {
             <br />Ou export par fill (symbol, qty, pnl, boughtTimestamp, soldTimestamp, …) — les fills du même jour sont regroupés automatiquement.
           </div>
           {!text.trim() && (
-            <div style={{ padding: '18px 14px', borderRadius: 10, border: '1px dashed var(--border-strong)', textAlign: 'center', fontSize: 13, color: 'var(--ink-3)' }}>
+            <div style={{ padding: '18px 14px', borderRadius: 4, border: '1px dashed var(--border-strong)', textAlign: 'center', fontSize: 13, color: 'var(--ink-3)' }}>
               Déposez un fichier CSV n'importe où sur la page pour continuer.
             </div>
           )}
 
           {parsed && (parsed.missingDate || parsed.missingRes) && (
-            <div style={{ marginTop: 12, padding: '10px 14px', borderRadius: 10, background: 'var(--loss-bg)', color: 'var(--loss)', fontSize: 13 }}>
+            <div style={{ marginTop: 12, padding: '10px 14px', borderRadius: 4, background: 'var(--loss-bg)', color: 'var(--loss)', fontSize: 13 }}>
               Colonne manquante : {parsed.missingDate ? 'date ' : ''}{parsed.missingRes ? 'resultat' : ''}. Vérifiez l'entête.
             </div>
           )}

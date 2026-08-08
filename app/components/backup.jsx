@@ -162,7 +162,7 @@ function BackupModal({ onClose }) {
 
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(20,20,18,.42)', backdropFilter: 'blur(3px)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '6vh 20px', overflowY: 'auto' }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: 18, width: '100%', maxWidth: 540, boxShadow: '0 24px 70px -20px rgba(20,20,18,.45)', border: '1px solid var(--border)' }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: 7, width: '100%', maxWidth: 540, boxShadow: '0 24px 70px -20px rgba(20,20,18,.45)', border: '1px solid var(--border)' }}>
         <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
           <div>
             <h2 style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 600 }}>Sauvegarde des données</h2>
@@ -176,9 +176,9 @@ function BackupModal({ onClose }) {
           <window.GithubSyncPanel />
 
           {/* NDJSON EXPORT — même structure que la synchro GitHub, en téléchargement ponctuel */}
-          <div style={{ padding: 18, borderRadius: 14, border: '1px solid var(--border)' }}>
+          <div style={{ padding: 18, borderRadius: 7, border: '1px solid var(--border)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-              <div style={{ width: 34, height: 34, borderRadius: 9, background: 'var(--surface-2)', color: 'var(--ink-2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><window.Icon name="journal" size={17} /></div>
+              <div style={{ width: 34, height: 34, borderRadius: 4, background: 'var(--surface-2)', color: 'var(--ink-2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><window.Icon name="journal" size={17} /></div>
               <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700 }}>Export NDJSON <span style={{ fontWeight: 500, color: 'var(--ink-3)' }}>(structure repo)</span></h3>
             </div>
             <p style={{ margin: '0 0 14px', fontSize: 13, color: 'var(--ink-2)', lineHeight: 1.5 }}>
@@ -194,15 +194,15 @@ function BackupModal({ onClose }) {
           </div>
 
           {/* IMPORT */}
-          <div style={{ padding: 18, borderRadius: 14, border: '1px solid var(--border)', marginTop: 16 }}>
+          <div style={{ padding: 18, borderRadius: 7, border: '1px solid var(--border)', marginTop: 16 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-              <div style={{ width: 34, height: 34, borderRadius: 9, background: 'var(--info-bg)', color: 'var(--info)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><window.Icon name="arrowUp" size={17} /></div>
+              <div style={{ width: 34, height: 34, borderRadius: 4, background: 'var(--info-bg)', color: 'var(--info)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><window.Icon name="arrowUp" size={17} /></div>
               <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700 }}>Importer / restaurer</h3>
             </div>
             <p style={{ margin: '0 0 10px', fontSize: 13, color: 'var(--ink-2)', lineHeight: 1.5 }}>
               Chargez une sauvegarde <code style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>.json</code> pour restaurer vos données (remplace les données actuelles sur cet appareil).
             </p>
-            <div style={{ margin: '0 0 14px', padding: '10px 14px', borderRadius: 10, background: 'var(--warn-bg)', color: 'var(--warn)', fontSize: 12.5, lineHeight: 1.5, display: 'flex', gap: 8 }}>
+            <div style={{ margin: '0 0 14px', padding: '10px 14px', borderRadius: 4, background: 'var(--warn-bg)', color: 'var(--warn)', fontSize: 12.5, lineHeight: 1.5, display: 'flex', gap: 8 }}>
               <window.Icon name="alert" size={16} style={{ flexShrink: 0, marginTop: 1 }} />
               <span>Si GitHub est connecté, la prochaine synchro écrasera <strong>tout</strong> le repo avec cette sauvegarde. Ne l'utilisez que si ce fichier est bien la version la plus récente.</span>
             </div>
@@ -210,10 +210,10 @@ function BackupModal({ onClose }) {
             <input ref={fileRef} type="file" accept="application/json,.json" onChange={onFile} style={{ display: 'none' }} />
 
             {incoming && incoming.error && (
-              <div style={{ marginTop: 12, padding: '10px 14px', borderRadius: 10, background: 'var(--loss-bg)', color: 'var(--loss)', fontSize: 13 }}>{incoming.error}</div>
+              <div style={{ marginTop: 12, padding: '10px 14px', borderRadius: 4, background: 'var(--loss-bg)', color: 'var(--loss)', fontSize: 13 }}>{incoming.error}</div>
             )}
             {incoming && !incoming.error && (
-              <div style={{ marginTop: 12, padding: '12px 14px', borderRadius: 10, background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
+              <div style={{ marginTop: 12, padding: '12px 14px', borderRadius: 4, background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
                 <div style={{ fontSize: 13, fontWeight: 600 }}>Sauvegarde valide</div>
                 <div style={{ fontSize: 12.5, color: 'var(--ink-2)', marginTop: 3 }}>
                   {incoming.accounts.length} comptes · {incoming.trades.length} trades{incoming.exportedAt ? ' · exportée le ' + fmtExportDate(incoming.exportedAt) : ''}

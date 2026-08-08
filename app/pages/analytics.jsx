@@ -13,8 +13,8 @@ function HBarRow({ label, value, max, count, color }) {
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '150px 1fr 100px', gap: 12, alignItems: 'center' }}>
       <span style={{ fontSize: 13, fontWeight: 600 }}>{label}</span>
-      <div style={{ height: 22, borderRadius: 6, background: 'var(--surface-2)', position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', inset: 0, width: (Math.abs(value) / max * 100) + '%', background: color, borderRadius: 6, opacity: .9 }} />
+      <div style={{ height: 22, borderRadius: 4, background: 'var(--surface-2)', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', inset: 0, width: (Math.abs(value) / max * 100) + '%', background: color, borderRadius: 4, opacity: .9 }} />
       </div>
       <span style={{ fontSize: 13, textAlign: 'right' }}><window.PnL value={value} style={{ fontWeight: 700 }} /> <span style={{ color: 'var(--ink-3)', fontSize: 11 }}>({count})</span></span>
     </div>
@@ -96,7 +96,7 @@ function Analytics() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-        <div style={{ display: 'inline-flex', background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 10, padding: 3 }}>
+        <div style={{ display: 'inline-flex', background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 4, padding: 3 }}>
                   </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <span style={{ fontSize: 12.5, color: 'var(--ink-3)' }}>
@@ -120,23 +120,23 @@ function Analytics() {
         <p style={{ margin: '0 0 16px', fontSize: 12.5, color: 'var(--ink-3)' }}>{negS.length} séance{negS.length > 1 ? 's' : ''} négative{negS.length > 1 ? 's' : ''} sur {sessions.length} · analyse par rapport aux séances positives.</p>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12, marginBottom: 20 }}>
-          <div style={{ padding: '12px 14px', borderRadius: 11, background: 'var(--surface-2)' }}>
+          <div style={{ padding: '12px 14px', borderRadius: 4, background: 'var(--surface-2)' }}>
             <div style={{ fontSize: 11.5, color: 'var(--ink-3)' }}>Perte moyenne / séance</div>
             <div style={{ fontWeight: 700, fontSize: 17, marginTop: 3 }}><window.PnL value={avg(negS, s => s.net)} dec={2} /></div>
           </div>
-          <div style={{ padding: '12px 14px', borderRadius: 11, background: 'var(--surface-2)' }}>
+          <div style={{ padding: '12px 14px', borderRadius: 4, background: 'var(--surface-2)' }}>
             <div style={{ fontSize: 11.5, color: 'var(--ink-3)' }}>Trades / séance (nég. vs pos.)</div>
             <div style={{ fontWeight: 700, fontSize: 17, marginTop: 3 }}><span style={{ color: 'var(--loss)' }}>{avg(negS, s => s.trades).toFixed(1)}</span> <span style={{ color: 'var(--ink-3)', fontWeight: 400, fontSize: 13 }}>vs {avg(posS, s => s.trades).toFixed(1)}</span></div>
           </div>
-          <div style={{ padding: '12px 14px', borderRadius: 11, background: 'var(--surface-2)' }}>
+          <div style={{ padding: '12px 14px', borderRadius: 4, background: 'var(--surface-2)' }}>
             <div style={{ fontSize: 11.5, color: 'var(--ink-3)' }}>Contrats / séance (nég. vs pos.)</div>
             <div style={{ fontWeight: 700, fontSize: 17, marginTop: 3 }}><span style={{ color: 'var(--loss)' }}>{avg(negS, s => s.contracts).toFixed(1)}</span> <span style={{ color: 'var(--ink-3)', fontWeight: 400, fontSize: 13 }}>vs {avg(posS, s => s.contracts).toFixed(1)}</span></div>
           </div>
-          <div style={{ padding: '12px 14px', borderRadius: 11, background: 'var(--surface-2)' }}>
+          <div style={{ padding: '12px 14px', borderRadius: 4, background: 'var(--surface-2)' }}>
             <div style={{ fontSize: 11.5, color: 'var(--ink-3)' }}>Note mentale moy. (nég. vs pos.)</div>
             <div style={{ fontWeight: 700, fontSize: 17, marginTop: 3 }}><span style={{ color: 'var(--loss)' }}>{avg(negS, s => s.mindSum / s.trades).toFixed(2)}</span> <span style={{ color: 'var(--ink-3)', fontWeight: 400, fontSize: 13 }}>vs {avg(posS, s => s.mindSum / s.trades).toFixed(2)}</span></div>
           </div>
-          <div style={{ padding: '12px 14px', borderRadius: 11, background: 'var(--surface-2)' }}>
+          <div style={{ padding: '12px 14px', borderRadius: 4, background: 'var(--surface-2)' }}>
             <div style={{ fontSize: 11.5, color: 'var(--ink-3)' }}>Après une séance verte</div>
             <div style={{ fontWeight: 700, fontSize: 17, marginTop: 3 }}>{negAfterGreen}<span style={{ color: 'var(--ink-3)', fontWeight: 400, fontSize: 13 }}>/{negS.length}</span></div>
           </div>
@@ -149,8 +149,8 @@ function Analytics() {
               {negByDow.map(x => (
                 <div key={x.d} style={{ display: 'grid', gridTemplateColumns: '40px 1fr 54px', gap: 10, alignItems: 'center' }}>
                   <span style={{ fontSize: 12.5, fontWeight: 600 }}>{dowFull[x.d]}</span>
-                  <div style={{ height: 18, borderRadius: 5, background: 'var(--surface-2)', position: 'relative', overflow: 'hidden' }}>
-                    <div style={{ position: 'absolute', inset: 0, width: (x.n / negDowMax * 100) + '%', background: 'var(--loss)', opacity: .85, borderRadius: 5 }} />
+                  <div style={{ height: 18, borderRadius: 4, background: 'var(--surface-2)', position: 'relative', overflow: 'hidden' }}>
+                    <div style={{ position: 'absolute', inset: 0, width: (x.n / negDowMax * 100) + '%', background: 'var(--loss)', opacity: .85, borderRadius: 4 }} />
                   </div>
                   <span style={{ fontSize: 12, textAlign: 'right', color: 'var(--ink-2)' }}>{x.n}<span style={{ color: 'var(--ink-3)' }}>/{x.total}</span></span>
                 </div>
@@ -163,8 +163,8 @@ function Analytics() {
               {negByMind.map(x => (
                 <div key={x.m} style={{ display: 'grid', gridTemplateColumns: '60px 1fr 40px', gap: 10, alignItems: 'center' }}>
                   <span style={{ fontSize: 12.5, fontWeight: 600 }}>Note {x.m}/3</span>
-                  <div style={{ height: 18, borderRadius: 5, background: 'var(--surface-2)', position: 'relative', overflow: 'hidden' }}>
-                    <div style={{ position: 'absolute', inset: 0, width: (x.n / negMindMax * 100) + '%', background: x.m === 1 ? 'var(--loss)' : x.m === 2 ? 'var(--warn)' : 'var(--ink-3)', opacity: .85, borderRadius: 5 }} />
+                  <div style={{ height: 18, borderRadius: 4, background: 'var(--surface-2)', position: 'relative', overflow: 'hidden' }}>
+                    <div style={{ position: 'absolute', inset: 0, width: (x.n / negMindMax * 100) + '%', background: x.m === 1 ? 'var(--loss)' : x.m === 2 ? 'var(--warn)' : 'var(--ink-3)', opacity: .85, borderRadius: 4 }} />
                   </div>
                   <span style={{ fontSize: 12, textAlign: 'right', color: 'var(--ink-2)' }}>{x.n}</span>
                 </div>
@@ -186,7 +186,7 @@ function Analytics() {
               {negS.slice().sort((a, b) => a.date < b.date ? 1 : -1).map(sx => {
                 const tr = list.find(t => t.date === sx.date);
                 return (
-                <div key={sx.date} onClick={() => tr && ctx.openTrade(tr.id)} className="tj-row" style={{ display: 'grid', gridTemplateColumns: '1fr auto auto auto 16px', gap: 12, alignItems: 'center', padding: '8px 12px', borderRadius: 9, background: 'var(--surface-2)', cursor: tr ? 'pointer' : 'default' }}>
+                <div key={sx.date} onClick={() => tr && ctx.openTrade(tr.id)} className="tj-row" style={{ display: 'grid', gridTemplateColumns: '1fr auto auto auto 16px', gap: 12, alignItems: 'center', padding: '8px 12px', borderRadius: 4, background: 'var(--surface-2)', cursor: tr ? 'pointer' : 'default' }}>
                   <span style={{ fontSize: 12.5, fontWeight: 600, textTransform: 'capitalize' }}>{new Date(sx.date + 'T00:00:00').toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
                   <span style={{ fontSize: 11.5, color: 'var(--ink-3)' }}>{sx.trades} trade{sx.trades > 1 ? 's' : ''}</span>
                   <span style={{ fontSize: 11.5, color: 'var(--ink-3)' }}>note {Math.round(sx.mindSum / sx.trades)}/3</span>

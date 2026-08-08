@@ -54,7 +54,7 @@ function Accounts() {
           background: active ? 'var(--surface-2)' : 'var(--surface)',
           border: '1px solid ' + (active ? 'var(--ink)' : health.overall !== 'profit' ? overallVar : 'var(--border)'), borderBottom: health.parts.length ? 'none' : undefined }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
-          <div style={{ width: 36, height: 36, borderRadius: 10, background: a.color, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', flexShrink: 0 }}>
+          <div style={{ width: 36, height: 36, borderRadius: 4, background: a.color, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', flexShrink: 0 }}>
             <window.Icon name={isMaster ? 'crown' : 'link'} size={17} />
           </div>
           <div style={{ minWidth: 0 }}>
@@ -197,7 +197,7 @@ function Accounts() {
       {ctx.accounts.length === 0 && (
         <window.Card pad={48}>
           <div style={{ textAlign: 'center', maxWidth: 440, margin: '0 auto' }}>
-            <div style={{ width: 56, height: 56, borderRadius: 16, background: 'var(--surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px', color: 'var(--ink-3)' }}>
+            <div style={{ width: 56, height: 56, borderRadius: 7, background: 'var(--surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px', color: 'var(--ink-3)' }}>
               <window.Icon name="wallet" size={26} />
             </div>
             <h3 style={{ margin: '0 0 8px', fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 600 }}>Aucun compte</h3>
@@ -238,7 +238,7 @@ function Accounts() {
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {master ? <AccountRow a={master} /> : (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '14px 18px', borderRadius: 14, background: 'var(--warn-bg)', border: '1px solid color-mix(in oklab, var(--warn) 30%, transparent)', fontSize: 13.5, color: 'var(--warn)', fontWeight: 600 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '14px 18px', borderRadius: 7, background: 'var(--warn-bg)', border: '1px solid color-mix(in oklab, var(--warn) 30%, transparent)', fontSize: 13.5, color: 'var(--warn)', fontWeight: 600 }}>
             <window.Icon name="alert" size={16} /> Aucun compte maître — cliquez sur la couronne d'un compte ci-dessous pour le désigner.
           </div>
         )}
@@ -264,10 +264,10 @@ function ReplayCard() {
         <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>Compte simulé</h3>
         <window.Badge>Replay</window.Badge>
       </div>
-      <div style={{ borderRadius: 14, padding: '16px 18px', background: 'repeating-linear-gradient(135deg, var(--surface-2), var(--surface-2) 10px, var(--surface) 10px, var(--surface) 20px)', border: '1px dashed var(--border-strong)' }}>
+      <div style={{ borderRadius: 7, padding: '16px 18px', background: 'repeating-linear-gradient(135deg, var(--surface-2), var(--surface-2) 10px, var(--surface) 10px, var(--surface) 20px)', border: '1px dashed var(--border-strong)' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '2.2fr 1fr 1fr 1fr 1.1fr', gap: 14, alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--ink-3)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', flexShrink: 0 }}>
+            <div style={{ width: 36, height: 36, borderRadius: 4, background: 'var(--ink-3)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', flexShrink: 0 }}>
               <window.Icon name="journal" size={17} />
             </div>
             <div style={{ minWidth: 0 }}>
@@ -306,7 +306,7 @@ function ArchivedSection() {
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {archived.map((a) => (
-          <div key={a.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '12px 16px', borderRadius: 12, background: 'var(--surface)', border: '1px solid var(--border)', opacity: .75 }}>
+          <div key={a.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '12px 16px', borderRadius: 4, background: 'var(--surface)', border: '1px solid var(--border)', opacity: .75 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
               <window.AccountDot color={a.color} />
               <span style={{ fontWeight: 600, fontSize: 13.5 }}>{a.name}</span>

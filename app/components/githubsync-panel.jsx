@@ -61,9 +61,9 @@ function GithubSyncPanel() {
   const fmtTime = (iso) => { if (!iso) return '—'; try { return new Date(iso).toLocaleString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }); } catch (e) { return '—'; } };
 
   return (
-    <div style={{ padding: 18, borderRadius: 14, border: '1px solid ' + (cfg.connected ? 'var(--profit)' : 'var(--border)'), background: cfg.connected ? 'color-mix(in oklab, var(--profit) 6%, var(--surface))' : 'var(--surface)', marginBottom: 16 }}>
+    <div style={{ padding: 18, borderRadius: 7, border: '1px solid ' + (cfg.connected ? 'var(--profit)' : 'var(--border)'), background: cfg.connected ? 'color-mix(in oklab, var(--profit) 6%, var(--surface))' : 'var(--surface)', marginBottom: 16 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-        <div style={{ width: 34, height: 34, borderRadius: 9, background: 'var(--ink)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><window.Icon name="link" size={17} /></div>
+        <div style={{ width: 34, height: 34, borderRadius: 4, background: 'var(--ink)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><window.Icon name="link" size={17} /></div>
         <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700 }}>Synchro GitHub</h3>
         {cfg.connected && <window.Badge tone="profit" style={{ fontSize: 10, marginLeft: 'auto' }}>Connecté</window.Badge>}
       </div>
@@ -77,9 +77,9 @@ function GithubSyncPanel() {
             <window.Button variant={mode === 'create' ? 'primary' : 'secondary'} size="sm" onClick={() => setMode('create')} style={{ flex: 1 }}>Nouveau repo</window.Button>
           </div>
           <input type="password" value={tokenInput} onChange={(e) => setTokenInput(e.target.value)} placeholder="Token GitHub (ghp_…)"
-            style={{ width: '100%', padding: '9px 12px', border: '1px solid var(--border)', borderRadius: 9, fontSize: 13, fontFamily: 'var(--font-mono)', background: 'var(--surface-2)', color: 'var(--ink)', boxSizing: 'border-box', marginBottom: 8 }} />
+            style={{ width: '100%', padding: '9px 12px', border: '1px solid var(--border)', borderRadius: 4, fontSize: 13, fontFamily: 'var(--font-mono)', background: 'var(--surface-2)', color: 'var(--ink)', boxSizing: 'border-box', marginBottom: 8 }} />
           <input type="text" value={repoName} onChange={(e) => setRepoName(e.target.value)} placeholder="Nom du repo (ex. journal_trading)"
-            style={{ width: '100%', padding: '9px 12px', border: '1px solid var(--border)', borderRadius: 9, fontSize: 13, background: 'var(--surface-2)', color: 'var(--ink)', boxSizing: 'border-box', marginBottom: 12 }} />
+            style={{ width: '100%', padding: '9px 12px', border: '1px solid var(--border)', borderRadius: 4, fontSize: 13, background: 'var(--surface-2)', color: 'var(--ink)', boxSizing: 'border-box', marginBottom: 12 }} />
           {mode === 'existing' ? (
             <window.Button variant="primary" icon="link" disabled={!tokenInput || !repoName || busy} onClick={doConnectExisting} style={{ width: '100%' }}>{busy ? 'Connexion…' : 'Connecter ce repo'}</window.Button>
           ) : (
@@ -88,7 +88,7 @@ function GithubSyncPanel() {
         </>
       ) : (
         <>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', borderRadius: 10, background: 'var(--surface-2)', marginBottom: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', borderRadius: 4, background: 'var(--surface-2)', marginBottom: 12 }}>
             <window.Icon name="journal" size={15} style={{ color: 'var(--ink-3)' }} />
             <span style={{ fontSize: 13, fontWeight: 600, fontFamily: 'var(--font-mono)' }}>{cfg.owner}/{cfg.repo}</span>
             <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--ink-3)', whiteSpace: 'nowrap' }}>{busy ? 'envoi…' : 'synchro ' + fmtTime(cfg.lastSync)}</span>
@@ -106,7 +106,7 @@ function GithubSyncPanel() {
           </div>
         </>
       )}
-      {error && <div style={{ marginTop: 12, padding: '10px 14px', borderRadius: 10, background: 'var(--loss-bg)', color: 'var(--loss)', fontSize: 12.5 }}>{error}</div>}
+      {error && <div style={{ marginTop: 12, padding: '10px 14px', borderRadius: 4, background: 'var(--loss-bg)', color: 'var(--loss)', fontSize: 12.5 }}>{error}</div>}
     </div>
   );
 }

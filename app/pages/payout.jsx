@@ -131,11 +131,11 @@ function PayoutCard({ a }) {
           <div style={{ marginTop: 4, fontSize: 11.5, color: 'var(--ink-3)', lineHeight: 1.5 }}>{info.payoutSplitNote}</div>
         )}
 
-        <div style={{ marginTop: 10, padding: '10px 14px', borderRadius: 10, background: 'var(--surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+        <div style={{ marginTop: 10, padding: '10px 14px', borderRadius: 4, background: 'var(--surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
           <span style={{ fontSize: 12.5, color: 'var(--ink-2)' }}>Retirable au-delà du filet : <window.PnL value={info.withdrawable} dec={2} style={{ fontWeight: 700 }} /></span>
           <div style={{ display: 'flex', gap: 8 }}>
             <input type="number" step="0.01" placeholder="Montant $" value={amt} onChange={e => setAmt(e.target.value)}
-              style={{ width: 110, padding: '7px 9px', border: '1px solid var(--border)', borderRadius: 8, fontSize: 13, fontFamily: 'inherit', textAlign: 'right', background: 'var(--surface)', color: 'var(--ink)' }} />
+              style={{ width: 110, padding: '7px 9px', border: '1px solid var(--border)', borderRadius: 4, fontSize: 13, fontFamily: 'inherit', textAlign: 'right', background: 'var(--surface)', color: 'var(--ink)' }} />
             <window.Button size="sm" variant="secondary" icon="check" onClick={recordPayout} style={{ opacity: (amt && !isNaN(Number(amt))) ? 1 : .5, pointerEvents: (amt && !isNaN(Number(amt))) ? 'auto' : 'none' }}>Enregistrer un payout</window.Button>
           </div>
         </div>
@@ -149,7 +149,7 @@ function PayoutCard({ a }) {
             {open && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
                 {info.payouts.slice().reverse().map(p => (
-                  <div key={p.id} style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: 10, alignItems: 'center', padding: '7px 12px', borderRadius: 9, background: 'var(--surface-2)' }}>
+                  <div key={p.id} style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: 10, alignItems: 'center', padding: '7px 12px', borderRadius: 4, background: 'var(--surface-2)' }}>
                     <span style={{ fontSize: 12.5 }}>{window.fmtDateFR(p.date)}</span>
                     <span style={{ fontSize: 12.5, fontWeight: 700 }}>{window.fmtMoney(p.amount, { signed: false })}</span>
                     <button className="tj-iconbtn tj-del" style={{ width: 26, height: 26 }} title="Supprimer"
@@ -174,7 +174,7 @@ function Payout() {
     return (
       <window.Card pad={48}>
         <div style={{ textAlign: 'center', maxWidth: 440, margin: '0 auto' }}>
-          <div style={{ width: 56, height: 56, borderRadius: 16, background: 'var(--surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px', color: 'var(--ink-3)' }}>
+          <div style={{ width: 56, height: 56, borderRadius: 7, background: 'var(--surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px', color: 'var(--ink-3)' }}>
             <window.Icon name="wallet" size={26} />
           </div>
           <h3 style={{ margin: '0 0 8px', fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 600 }}>Aucune règle de payout configurée</h3>

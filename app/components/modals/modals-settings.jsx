@@ -9,7 +9,7 @@ function SettingsModal({ onClose }) {
   const [nf, setNf] = useStateSet({ name: '', fee: '' });
 
   const refresh = () => setFirms(window.getPropfirms());
-  const inS = { padding: '8px 10px', border: '1px solid var(--border)', borderRadius: 8, fontSize: 13.5, fontFamily: 'inherit', background: 'var(--surface)', color: 'var(--ink)', boxSizing: 'border-box' };
+  const inS = { padding: '8px 10px', border: '1px solid var(--border)', borderRadius: 4, fontSize: 13.5, fontFamily: 'inherit', background: 'var(--surface)', color: 'var(--ink)', boxSizing: 'border-box' };
 
   function commitFee(name, val) { window.setFirmFee(name, 'MES', val); refresh(); }
   function addFirm() {
@@ -54,7 +54,7 @@ function SettingsModal({ onClose }) {
     return (
       <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
         <button type="button" onClick={onClick}
-          style={{ width: 20, height: 20, borderRadius: 6, border: '1.5px solid ' + (on ? 'var(--ink)' : 'var(--border-strong)'), background: on ? 'var(--ink)' : 'transparent', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
+          style={{ width: 20, height: 20, borderRadius: 4, border: '1.5px solid ' + (on ? 'var(--ink)' : 'var(--border-strong)'), background: on ? 'var(--ink)' : 'transparent', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
           {on && <window.Icon name="check" size={13} stroke={3} />}
         </button>
         <span style={{ fontSize: 13, fontWeight: 600 }}>{label}</span>
@@ -84,7 +84,7 @@ function SettingsModal({ onClose }) {
 
     if (!unlocked) {
       return (
-        <div style={{ padding: 14, borderRadius: 11, background: 'var(--surface)', border: '1px solid var(--border)' }}>
+        <div style={{ padding: 14, borderRadius: 4, background: 'var(--surface)', border: '1px solid var(--border)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
             <span style={{ fontWeight: 700, fontSize: 14 }}>{t.label || 'Sans nom'}{t.isEval && <window.Badge tone="info" style={{ fontSize: 10, marginLeft: 7 }}>Éval</window.Badge>}</span>
             <div style={{ display: 'flex', gap: 6 }}>
@@ -108,7 +108,7 @@ function SettingsModal({ onClose }) {
     }
 
     return (
-      <div style={{ padding: 14, borderRadius: 11, background: 'var(--surface)', border: '1px solid var(--ink)' }}>
+      <div style={{ padding: 14, borderRadius: 4, background: 'var(--surface)', border: '1px solid var(--ink)' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: 10, alignItems: 'end' }}>
           <label style={{ display: 'block' }}>
             <div style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--ink-2)', marginBottom: 5 }}>Nom du type</div>
@@ -119,7 +119,7 @@ function SettingsModal({ onClose }) {
         </div>
 
         {/* drawdown */}
-        <div style={{ marginTop: 12, padding: 12, borderRadius: 10, background: 'var(--surface-2)' }}>
+        <div style={{ marginTop: 12, padding: 12, borderRadius: 4, background: 'var(--surface-2)' }}>
           <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 10 }}>Drawdown maximum</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
             <label style={{ display: 'block' }}>
@@ -136,7 +136,7 @@ function SettingsModal({ onClose }) {
         </div>
 
         {/* DLL */}
-        <div style={{ marginTop: 10, padding: 12, borderRadius: 10, background: 'var(--surface-2)' }}>
+        <div style={{ marginTop: 10, padding: 12, borderRadius: 4, background: 'var(--surface-2)' }}>
           <Toggle label="Limite de perte journalière (DLL)" on={!!t.hasDll} onClick={() => patch({ hasDll: !t.hasDll })} />
           {t.hasDll && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--ink-2)', marginTop: 10 }}>
@@ -148,7 +148,7 @@ function SettingsModal({ onClose }) {
         </div>
 
         {/* inactivity rule */}
-        <div style={{ marginTop: 10, padding: 12, borderRadius: 10, background: 'var(--surface-2)' }}>
+        <div style={{ marginTop: 10, padding: 12, borderRadius: 4, background: 'var(--surface-2)' }}>
           <Toggle label="Règle d'inactivité" on={!!t.hasInactivity} onClick={() => patch({ hasInactivity: !t.hasInactivity })} />
           {t.hasInactivity && (
             <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -170,13 +170,13 @@ function SettingsModal({ onClose }) {
         </div>
 
         {/* payout rule */}
-        <div style={{ marginTop: 10, padding: 12, borderRadius: 10, background: 'var(--surface-2)' }}>
+        <div style={{ marginTop: 10, padding: 12, borderRadius: 4, background: 'var(--surface-2)' }}>
           <Toggle label="Règle de payout" on={!!t.hasPayout} onClick={() => patch({ hasPayout: !t.hasPayout })} />
           {t.hasPayout && (
             <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <div style={{ display: 'inline-flex', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 9, padding: 2, width: 'fit-content' }}>
+              <div style={{ display: 'inline-flex', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 4, padding: 2, width: 'fit-content' }}>
                 {[['scale', 'Échelle progressive'], ['pctCapped', '% du profit plafonné']].map(([v, lbl]) => (
-                  <button key={v} onClick={() => patch({ payoutModel: v })} style={{ border: 'none', cursor: 'pointer', borderRadius: 7, padding: '6px 12px', fontSize: 12, fontWeight: 600, fontFamily: 'inherit', background: (t.payoutModel || 'scale') === v ? 'var(--ink)' : 'transparent', color: (t.payoutModel || 'scale') === v ? '#fff' : 'var(--ink-2)' }}>{lbl}</button>
+                  <button key={v} onClick={() => patch({ payoutModel: v })} style={{ border: 'none', cursor: 'pointer', borderRadius: 4, padding: '6px 12px', fontSize: 12, fontWeight: 600, fontFamily: 'inherit', background: (t.payoutModel || 'scale') === v ? 'var(--ink)' : 'transparent', color: (t.payoutModel || 'scale') === v ? '#fff' : 'var(--ink-2)' }}>{lbl}</button>
                 ))}
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', fontSize: 13, color: 'var(--ink-2)' }}>
@@ -228,7 +228,7 @@ function SettingsModal({ onClose }) {
         </div>
 
         {/* eval-only fields */}
-        <div style={{ marginTop: 10, padding: 12, borderRadius: 10, background: 'var(--surface-2)' }}>
+        <div style={{ marginTop: 10, padding: 12, borderRadius: 4, background: 'var(--surface-2)' }}>
           <Toggle label="Compte d'évaluation (pas encore financé)" on={!!t.isEval} onClick={() => patch({ isEval: !t.isEval })} />
           {t.isEval && (
             <div style={{ marginTop: 10, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
@@ -260,7 +260,7 @@ function SettingsModal({ onClose }) {
         {firms.map(fm => {
           const open = expanded === fm.name;
           return (
-            <div key={fm.name} style={{ borderRadius: 12, background: 'var(--surface-2)', border: '1px solid var(--border)', overflow: 'hidden' }}>
+            <div key={fm.name} style={{ borderRadius: 4, background: 'var(--surface-2)', border: '1px solid var(--border)', overflow: 'hidden' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto auto', gap: 10, alignItems: 'center', padding: '12px 14px' }}>
                 <button onClick={() => setExpanded(open ? null : fm.name)} style={{ display: 'flex', alignItems: 'center', gap: 8, border: 'none', background: 'transparent', cursor: 'pointer', fontFamily: 'inherit', padding: 0, textAlign: 'left', minWidth: 0 }}>
                   <window.Icon name={open ? 'chevD' : 'chevR'} size={15} style={{ color: 'var(--ink-3)' }} />
@@ -291,7 +291,7 @@ function SettingsModal({ onClose }) {
       {!adding ? (
         <button className="tj-addslave" style={{ marginTop: 12 }} onClick={() => setAdding(true)}><window.Icon name="plus" size={15} /> Ajouter une prop firm</button>
       ) : (
-        <div style={{ marginTop: 12, padding: 14, borderRadius: 11, border: '1px dashed var(--border-strong)' }}>
+        <div style={{ marginTop: 12, padding: 14, borderRadius: 4, border: '1px dashed var(--border-strong)' }}>
           <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--ink-2)', marginBottom: 8 }}>Nouvelle prop firm</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 120px auto auto', gap: 10, alignItems: 'center' }}>
             <input placeholder="Nom (ex. Topstep)" value={nf.name} onChange={e => setNf(p => ({ ...p, name: e.target.value }))} style={{ ...inS }} />

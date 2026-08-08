@@ -165,7 +165,7 @@ function PerfCalendar({ scope, onPickDay, ym: ymProp, setYm: setYmProp }) {
                   }
                   return (
                     <button key={di} disabled={!exceptional} onClick={onWeekendClick} className="tj-calcell" title={exceptional ? 'Trade enregistré un week-end — cliquer pour modifier ou supprimer' : undefined} style={{
-                      aspectRatio: '1', borderRadius: 11, textAlign: 'left', fontFamily: 'inherit',
+                      aspectRatio: '1', borderRadius: 4, textAlign: 'left', fontFamily: 'inherit',
                       border: exceptional ? '1.5px solid var(--loss)' : (mk ? '2.5px solid ' + mk.b : '1px solid var(--border)'),
                       background: exceptional ? (day ? pnlBg(day.pnl).bg : 'var(--loss-bg)') : (mk ? mk.bg : 'var(--border)'),
                       color: exceptional ? (day ? pnlBg(day.pnl).fg : 'var(--loss)') : 'var(--ink-3)', padding: 7,
@@ -193,7 +193,7 @@ function PerfCalendar({ scope, onPickDay, ym: ymProp, setYm: setYmProp }) {
                         </span>
                       )}
                       {rp && (
-                        <span title={rp.count + ' trade(s) replay'} style={{ fontSize: 9.5, fontWeight: 700, color: rp.pnl >= 0 ? 'var(--profit)' : 'var(--loss)', background: 'var(--surface)', border: '1px dashed var(--border-strong)', borderRadius: 5, padding: '1px 5px', display: 'inline-flex', alignItems: 'center', gap: 3, alignSelf: 'flex-start' }}>
+                        <span title={rp.count + ' trade(s) replay'} style={{ fontSize: 9.5, fontWeight: 700, color: rp.pnl >= 0 ? 'var(--profit)' : 'var(--loss)', background: 'var(--surface)', border: '1px dashed var(--border-strong)', borderRadius: 4, padding: '1px 5px', display: 'inline-flex', alignItems: 'center', gap: 3, alignSelf: 'flex-start' }}>
                           R {(rp.pnl > 0 ? '+' : rp.pnl < 0 ? '−' : '') + window.fmtNum(Math.abs(rp.pnl), 0)}
                         </span>
                       )}
@@ -216,7 +216,7 @@ function PerfCalendar({ scope, onPickDay, ym: ymProp, setYm: setYmProp }) {
                   <button key={di} disabled={!day && !nt} onClick={onClick}
                     className="tj-calcell"
                     style={{
-                      aspectRatio: '1', borderRadius: 11,
+                      aspectRatio: '1', borderRadius: 4,
                       border: mk ? '2.5px solid ' + mk.b : '1px solid ' + ((day || nt) ? 'transparent' : 'var(--border)'),
                       boxShadow: qd && !mk ? 'inset 0 0 0 2.5px var(--gold)' : 'none',
                       background: day ? bg : (nt ? 'var(--surface-2)' : (dl ? 'var(--gold-bg)' : (future ? 'transparent' : 'var(--surface)'))),
@@ -232,14 +232,14 @@ function PerfCalendar({ scope, onPickDay, ym: ymProp, setYm: setYmProp }) {
                       {day && <span style={{ fontSize: 11.5, fontWeight: 700, fontVariantNumeric: 'tabular-nums', lineHeight: 1.1 }}>
                         {(day.pnl > 0 ? '+' : day.pnl < 0 ? '−' : '') + window.fmtNum(Math.abs(day.pnl), Number.isInteger(Math.round(day.pnl * 100) / 100) ? 0 : 2)}
                       </span>}
-                      {nt && <span style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.03em', alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', gap: 3, color: day ? '#fff' : 'var(--ink-3)', background: day ? 'rgba(255,255,255,.24)' : 'transparent', borderRadius: 5, padding: day ? '1px 5px' : 0 }}>No trade ✕</span>}
+                      {nt && <span style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.03em', alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', gap: 3, color: day ? '#fff' : 'var(--ink-3)', background: day ? 'rgba(255,255,255,.24)' : 'transparent', borderRadius: 4, padding: day ? '1px 5px' : 0 }}>No trade ✕</span>}
                       {mk && !day && !nt && mk.list.map(a => (
                         <span key={a.id} title={a.name} style={{ fontSize: 9.5, fontWeight: 700, color: mk.ink, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'flex', alignItems: 'center', gap: 3 }}>
                           <span style={{ width: 6, height: 6, borderRadius: 99, background: a.color, flexShrink: 0, display: 'inline-block' }} />{a.name}
                         </span>
                       ))}
                       {rp && (
-                        <span title={rp.count + ' trade(s) replay'} style={{ fontSize: 9.5, fontWeight: 700, color: rp.pnl >= 0 ? 'var(--profit)' : 'var(--loss)', background: 'var(--surface)', border: '1px dashed var(--border-strong)', borderRadius: 5, padding: '1px 5px', display: 'inline-flex', alignItems: 'center', gap: 3, alignSelf: 'flex-start' }}>
+                        <span title={rp.count + ' trade(s) replay'} style={{ fontSize: 9.5, fontWeight: 700, color: rp.pnl >= 0 ? 'var(--profit)' : 'var(--loss)', background: 'var(--surface)', border: '1px dashed var(--border-strong)', borderRadius: 4, padding: '1px 5px', display: 'inline-flex', alignItems: 'center', gap: 3, alignSelf: 'flex-start' }}>
                           R {(rp.pnl > 0 ? '+' : rp.pnl < 0 ? '−' : '') + window.fmtNum(Math.abs(rp.pnl), 0)}
                         </span>
                       )}
@@ -247,7 +247,7 @@ function PerfCalendar({ scope, onPickDay, ym: ymProp, setYm: setYmProp }) {
                   </button>
                 );
               })}
-              <div style={{ borderRadius: 11, background: 'var(--surface-2)', border: '1px solid var(--border)', padding: '7px 9px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+              <div style={{ borderRadius: 4, background: 'var(--surface-2)', border: '1px solid var(--border)', padding: '7px 9px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                 <window.PnL value={wkTotal} style={{ fontSize: 14, fontWeight: 700 }} />
                 <span style={{ fontSize: 11, color: 'var(--ink-3)' }}>{wkTrades} trade{wkTrades > 1 ? 's' : ''}</span>
               </div>
@@ -280,7 +280,7 @@ function MiniCalendar({ scope }) {
           const dow = dt.getDay();
           const weekend = dow === 0 || dow === 6;
           if (weekend) {
-            return <div key={i} style={{ aspectRatio: '1', borderRadius: 6, background: 'var(--border)', color: 'var(--ink-3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10.5, fontWeight: 600, opacity: 0.5 }}>{dt.getDate()}</div>;
+            return <div key={i} style={{ aspectRatio: '1', borderRadius: 4, background: 'var(--border)', color: 'var(--ink-3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10.5, fontWeight: 600, opacity: 0.5 }}>{dt.getDate()}</div>;
           }
           const iso = window.isoDate(dt);
           const day = daily[iso];
@@ -289,7 +289,7 @@ function MiniCalendar({ scope }) {
           const { bg, fg } = day ? pnlBg(day.pnl) : { bg: (nt ? 'var(--surface-2)' : 'var(--surface-2)'), fg: 'var(--ink-3)' };
           return (
             <div key={i} title={day ? window.fmtMoney(day.pnl) : (nt ? 'No trade' : '')} style={{
-              aspectRatio: '1', borderRadius: 6, background: future && !nt ? 'transparent' : bg, color: fg,
+              aspectRatio: '1', borderRadius: 4, background: future && !nt ? 'transparent' : bg, color: fg,
               display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10.5, fontWeight: 600,
               border: (day || nt) ? 'none' : '1px solid var(--border)', opacity: (future && !nt) ? 0.3 : 1,
             }}>{dt.getDate()}</div>

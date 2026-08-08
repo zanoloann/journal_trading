@@ -52,7 +52,7 @@ function Card({ children, style, className, pad = 20, onClick, hover }) {
     className={'tj-card ' + (className || '')}
     style={{
       background: 'var(--surface)', border: '1px solid var(--border)',
-      borderRadius: 16, padding: pad, cursor: onClick ? 'pointer' : 'default',
+      borderRadius: 7, padding: pad, cursor: onClick ? 'pointer' : 'default',
       transition: 'box-shadow .18s ease, transform .18s ease, border-color .18s ease',
       boxShadow: hover && h ? '0 8px 28px -12px rgba(20,20,18,.18)' : '0 1px 2px rgba(20,20,18,.03)',
       transform: hover && h ? 'translateY(-2px)' : 'none',
@@ -195,7 +195,7 @@ function EquityChart({ data, height = 240, color = 'var(--profit)' }) {
       <div style={{
         position: 'absolute', top: 0, pointerEvents: 'none',
         left: Math.min(w - 150, Math.max(0, padL + hover * stepX - 60)),
-        background: 'var(--ink)', color: '#fff', borderRadius: 10, padding: '7px 10px',
+        background: 'var(--ink)', color: '#fff', borderRadius: 4, padding: '7px 10px',
         fontSize: 12, lineHeight: 1.35, boxShadow: '0 6px 18px -6px rgba(0,0,0,.4)'
       }}>
           <div style={{ fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{fmtMoney(data[hover].value, { signed: false })}</div>
@@ -248,7 +248,7 @@ function Kpi({ label, value, sub, accent, icon }) {
 function ChartPlaceholder({ height = 180, label = 'capture du graphique' }) {
   return (
     <div style={{
-      height, borderRadius: 12, border: '1px dashed var(--border-strong)',
+      height, borderRadius: 4, border: '1px dashed var(--border-strong)',
       background: 'repeating-linear-gradient(135deg, var(--surface-2), var(--surface-2) 10px, transparent 10px, transparent 20px)',
       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, color: 'var(--ink-3)'
     }}>
@@ -261,14 +261,14 @@ function ChartPlaceholder({ height = 180, label = 'capture du graphique' }) {
 // ---------------- Segmented control ----------------
 function Segmented({ options, value, onChange, size = 'md' }) {
   return (
-    <div style={{ display: 'inline-flex', background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 10, padding: 3, gap: 2 }}>
+    <div style={{ display: 'inline-flex', background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 4, padding: 3, gap: 2 }}>
       {options.map((o) => {
         const v = typeof o === 'string' ? o : o.value;
         const lbl = typeof o === 'string' ? o : o.label;
         const active = v === value;
         return (
           <button key={v} onClick={() => onChange(v)} style={{
-            border: 'none', cursor: 'pointer', borderRadius: 7,
+            border: 'none', cursor: 'pointer', borderRadius: 4,
             padding: size === 'sm' ? '5px 10px' : '7px 13px', fontSize: 13, fontWeight: 600,
             fontFamily: 'inherit',
             background: active ? 'var(--surface)' : 'transparent',
@@ -287,7 +287,7 @@ function Button({ children, onClick, variant = 'primary', icon, size = 'md', sty
   const [h, setH] = useState(false);
   const base = {
     display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-    border: '1px solid transparent', borderRadius: 11, cursor: 'pointer', fontFamily: 'inherit',
+    border: '1px solid transparent', borderRadius: 4, cursor: 'pointer', fontFamily: 'inherit',
     fontWeight: 600, fontSize: size === 'sm' ? 13 : 14, padding: size === 'sm' ? '8px 13px' : '11px 17px',
     transition: 'all .15s', whiteSpace: 'nowrap'
   };

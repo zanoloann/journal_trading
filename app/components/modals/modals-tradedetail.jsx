@@ -41,7 +41,7 @@ function TradeDetailModal({ tradeId, onClose }) {
           const mLeg = t.accounts.find(l => { const acc = ctx.accounts.find(x => x.id === l.accountId); return acc && acc.role === 'master'; });
           const mFees = mLeg ? mLeg.fees : +(window.FEE * t.contracts).toFixed(2);
           return [['Contrats (maître)', t.contracts], ['Brut maître', window.fmtMoney(t.gross)], ['Frais maître', '−' + window.fmtNum(mFees, 2) + ' $'], ['Net maître', window.fmtMoney(+(t.gross - mFees).toFixed(2))]];
-        })().map(([l, v], i) => (          <div key={i} style={{ padding: '12px 14px', borderRadius: 11, background: 'var(--surface-2)' }}>
+        })().map(([l, v], i) => (          <div key={i} style={{ padding: '12px 14px', borderRadius: 4, background: 'var(--surface-2)' }}>
             <div style={{ fontSize: 11.5, color: 'var(--ink-3)' }}>{l}</div>
             <div style={{ fontWeight: 700, fontSize: 15, marginTop: 3, fontVariantNumeric: 'tabular-nums' }}>{v}</div>
           </div>
@@ -51,7 +51,7 @@ function TradeDetailModal({ tradeId, onClose }) {
       {/* gross / fees / net summary across all accounts */}
       <div style={{ display: 'flex', gap: 10, marginBottom: 18 }}>
         {[['Brut total', window.fmtMoney(gross), 'var(--ink)'], ['Frais', '−' + window.fmtNum(fees, 2) + ' $', 'var(--loss)'], ['Net total', null, null]].map(([l, v], i) => (
-          <div key={i} style={{ flex: 1, padding: '12px 14px', borderRadius: 11, border: '1px solid var(--border)' }}>
+          <div key={i} style={{ flex: 1, padding: '12px 14px', borderRadius: 4, border: '1px solid var(--border)' }}>
             <div style={{ fontSize: 11.5, color: 'var(--ink-3)' }}>{l}</div>
             {i === 2 ? <window.PnL value={net} dec={2} style={{ fontWeight: 700, fontSize: 16 }} /> : <div style={{ fontWeight: 700, fontSize: 16, color: v && i === 1 ? 'var(--loss)' : 'var(--ink)' }}>{v}</div>}
           </div>
@@ -77,7 +77,7 @@ function TradeDetailModal({ tradeId, onClose }) {
             const visible = shown(a.accountId);
             const isEditing = editAcc === a.accountId;
             return (
-              <div key={a.accountId} style={{ display: 'grid', gridTemplateColumns: '1.4fr .7fr .9fr auto', gap: 10, alignItems: 'center', padding: '10px 14px', borderRadius: 10, background: 'var(--surface-2)' }}>
+              <div key={a.accountId} style={{ display: 'grid', gridTemplateColumns: '1.4fr .7fr .9fr auto', gap: 10, alignItems: 'center', padding: '10px 14px', borderRadius: 4, background: 'var(--surface-2)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <window.AccountDot color={acc.color} />
                   <span style={{ fontWeight: 600, fontSize: 13.5 }}>{acc.name}</span>
@@ -91,7 +91,7 @@ function TradeDetailModal({ tradeId, onClose }) {
                     onChange={e => setEditVal(e.target.value)}
                     onBlur={commitEdit}
                     onKeyDown={e => { if (e.key === 'Enter') commitEdit(); if (e.key === 'Escape') { setEditAcc(null); setEditVal(''); } }}
-                    style={{ width: 90, justifySelf: 'end', padding: '6px 8px', border: '1px solid var(--info)', borderRadius: 8, fontSize: 13.5, fontWeight: 700, fontFamily: 'inherit', textAlign: 'right', background: 'var(--surface)', color: 'var(--ink)', boxShadow: '0 0 0 3px color-mix(in oklab, var(--info) 18%, transparent)' }} />
+                    style={{ width: 90, justifySelf: 'end', padding: '6px 8px', border: '1px solid var(--info)', borderRadius: 4, fontSize: 13.5, fontWeight: 700, fontFamily: 'inherit', textAlign: 'right', background: 'var(--surface)', color: 'var(--ink)', boxShadow: '0 0 0 3px color-mix(in oklab, var(--info) 18%, transparent)' }} />
                 ) : (
                   <span onClick={() => !visible && setRevealed(p => ({ ...p, [a.accountId]: true }))}
                     onDoubleClick={() => startEdit(a)}
@@ -109,7 +109,7 @@ function TradeDetailModal({ tradeId, onClose }) {
       {t.notes && (
         <div style={{ marginTop: 18 }}>
           <h3 style={{ margin: '0 0 8px', fontSize: 14, fontWeight: 700 }}>Notes</h3>
-          <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: 'var(--ink-2)', background: 'var(--surface-2)', padding: '14px 16px', borderRadius: 11 }}>{t.notes}</p>
+          <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: 'var(--ink-2)', background: 'var(--surface-2)', padding: '14px 16px', borderRadius: 4 }}>{t.notes}</p>
         </div>
       )}
     </Modal>

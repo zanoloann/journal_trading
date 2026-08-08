@@ -61,7 +61,7 @@ function Journal() {
 
   function Check({ on, onClick, dim }) {
     return (
-      <button onClick={onClick} style={{ width: 20, height: 20, borderRadius: 6, border: '1.5px solid ' + (on ? 'var(--ink)' : 'var(--border-strong)'), background: on ? 'var(--ink)' : 'transparent', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, opacity: dim && !on ? .55 : 1 }}>
+      <button onClick={onClick} style={{ width: 20, height: 20, borderRadius: 4, border: '1.5px solid ' + (on ? 'var(--ink)' : 'var(--border-strong)'), background: on ? 'var(--ink)' : 'transparent', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, opacity: dim && !on ? .55 : 1 }}>
         {on && <window.Icon name="check" size={13} stroke={3} />}
       </button>
     );
@@ -74,7 +74,7 @@ function Journal() {
           <div style={{ position: 'relative', flex: '1 1 200px', minWidth: 160 }}>
             <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--ink-3)' }}><window.Icon name="search" size={16} /></span>
             <input value={q} onChange={e => setQ(e.target.value)} placeholder="Rechercher MES, ES, note…"
-              style={{ width: '100%', padding: '10px 12px 10px 36px', border: '1px solid var(--border)', borderRadius: 10, fontSize: 13.5, fontFamily: 'inherit', background: 'var(--surface-2)', color: 'var(--ink)', boxSizing: 'border-box' }} />
+              style={{ width: '100%', padding: '10px 12px 10px 36px', border: '1px solid var(--border)', borderRadius: 4, fontSize: 13.5, fontFamily: 'inherit', background: 'var(--surface-2)', color: 'var(--ink)', boxSizing: 'border-box' }} />
           </div>
           <window.Segmented size="sm" value={instr} onChange={setInstr} options={[{ value: 'all', label: 'Tous' }, { value: 'MES', label: 'MES' }, { value: 'ES', label: 'ES' }]} />
           <window.Segmented size="sm" value={result} onChange={setResult} options={[{ value: 'all', label: 'Résultat' }, { value: 'win', label: 'Gains' }, { value: 'loss', label: 'Pertes' }]} />
@@ -94,7 +94,7 @@ function Journal() {
       </window.Card>
 
       {selIds.length > 0 ? (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 18px', borderRadius: 12, background: 'var(--ink)', color: '#fff' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 18px', borderRadius: 4, background: 'var(--ink)', color: '#fff' }}>
           <span style={{ fontSize: 13.5, fontWeight: 600 }}>{selIds.length} trade{selIds.length > 1 ? 's' : ''} sélectionné{selIds.length > 1 ? 's' : ''}</span>
           <div style={{ display: 'flex', gap: 10 }}>
             <window.Button size="sm" variant="ghost" style={{ color: '#fff' }} onClick={() => setSel({})}>Désélectionner</window.Button>
@@ -139,7 +139,7 @@ function Journal() {
                 }}>
                   <Check on={on} onClick={(e) => toggle(t.id, e)} />
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{ width: 36, height: 34, borderRadius: 9, background: t.symbol === 'ES' ? 'var(--warn-bg)' : 'var(--surface-2)', color: t.symbol === 'ES' ? 'var(--warn)' : 'var(--ink)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, fontFamily: 'var(--font-mono)', flexShrink: 0 }}>{t.symbol}</div>
+                    <div style={{ width: 36, height: 34, borderRadius: 4, background: t.symbol === 'ES' ? 'var(--warn-bg)' : 'var(--surface-2)', color: t.symbol === 'ES' ? 'var(--warn)' : 'var(--ink)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, fontFamily: 'var(--font-mono)', flexShrink: 0 }}>{t.symbol}</div>
                     <div>
                       <div style={{ fontWeight: 700, fontSize: 14, whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6 }}>
                         {t.symbol === 'ES' ? 'E-mini S&P' : 'Micro E-mini'}
@@ -189,7 +189,7 @@ function Journal() {
                     }}>
                       <span></span>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <div style={{ width: 36, height: 34, borderRadius: 9, background: 'var(--surface)', border: '1px dashed var(--border-strong)', color: 'var(--ink-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, fontFamily: 'var(--font-mono)', flexShrink: 0 }}>{t.symbol}</div>
+                        <div style={{ width: 36, height: 34, borderRadius: 4, background: 'var(--surface)', border: '1px dashed var(--border-strong)', color: 'var(--ink-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, fontFamily: 'var(--font-mono)', flexShrink: 0 }}>{t.symbol}</div>
                         <div>
                           <div style={{ fontWeight: 700, fontSize: 13.5 }}>{t.symbol === 'ES' ? 'E-mini S&P' : 'Micro E-mini'}</div>
                           <div style={{ fontSize: 11.5, color: 'var(--ink-3)' }}>Brut {window.fmtMoney(window.tradeGross(t, window.REPLAY_ACCOUNT_ID))}</div>

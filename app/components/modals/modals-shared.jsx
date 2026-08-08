@@ -10,7 +10,7 @@ function Modal({ children, onClose, width = 560, title, subtitle, footer }) {
   }, []);
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(20,20,18,.42)', backdropFilter: 'blur(3px)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '5vh 20px', overflowY: 'auto' }}>
-      <div onClick={e => e.stopPropagation()} className="tj-modal" style={{ background: 'var(--surface)', borderRadius: 18, width: '100%', maxWidth: width, boxShadow: '0 24px 70px -20px rgba(20,20,18,.45)', border: '1px solid var(--border)' }}>
+      <div onClick={e => e.stopPropagation()} className="tj-modal" style={{ background: 'var(--surface)', borderRadius: 7, width: '100%', maxWidth: width, boxShadow: '0 24px 70px -20px rgba(20,20,18,.45)', border: '1px solid var(--border)' }}>
         {title && (
           <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
             <div>
@@ -36,7 +36,7 @@ function Field({ label, children, hint }) {
     </label>
   );
 }
-const inputStyle = { width: '100%', padding: '10px 12px', border: '1px solid var(--border)', borderRadius: 10, fontSize: 14, fontFamily: 'inherit', background: 'var(--surface-2)', color: 'var(--ink)', boxSizing: 'border-box' };
+const inputStyle = { width: '100%', padding: '10px 12px', border: '1px solid var(--border)', borderRadius: 4, fontSize: 14, fontFamily: 'inherit', background: 'var(--surface-2)', color: 'var(--ink)', boxSizing: 'border-box' };
 
 function eligible(a, symbol) {
   if (a.role === 'master') return true;

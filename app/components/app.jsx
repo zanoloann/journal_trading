@@ -80,7 +80,7 @@ function ScopeSelector() {
       {open &&
       <>
           <div style={{ position: 'fixed', inset: 0, zIndex: 40 }} onClick={() => setOpen(false)} />
-          <div style={{ position: 'absolute', top: '110%', left: 0, zIndex: 41, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, boxShadow: '0 16px 40px -14px rgba(20,20,18,.3)', padding: 6, minWidth: 250 }}>
+          <div style={{ position: 'absolute', top: '110%', left: 0, zIndex: 41, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 4, boxShadow: '0 16px 40px -14px rgba(20,20,18,.3)', padding: 6, minWidth: 250 }}>
             <button className="tj-scopeitem" onClick={() => {ctx.setScope('ref');setOpen(false);}}>
               <window.Icon name="target" size={13} stroke={2.4} style={{ color: 'var(--gold-ink)' }} />
               <span style={{ fontWeight: 600 }}>Compte maître</span>
@@ -122,7 +122,7 @@ function PeriodSelector() {
       {open &&
       <>
           <div style={{ position: 'fixed', inset: 0, zIndex: 40 }} onClick={() => setOpen(false)} />
-          <div style={{ position: 'absolute', top: '110%', right: 0, zIndex: 41, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, boxShadow: '0 16px 40px -14px rgba(20,20,18,.3)', padding: 6, minWidth: 220 }}>
+          <div style={{ position: 'absolute', top: '110%', right: 0, zIndex: 41, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 4, boxShadow: '0 16px 40px -14px rgba(20,20,18,.3)', padding: 6, minWidth: 220 }}>
             {presets.map((p) =>
           <button key={p} className="tj-scopeitem" onClick={() => { ctx.setPeriod({ preset: p, from: null, to: null }); setOpen(false); }}>
                 <span style={{ fontWeight: 600 }}>{window.PERIOD_LABEL[p]}</span>
@@ -137,9 +137,9 @@ function PeriodSelector() {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
                 <input type="date" value={ctx.period.from || ''} onChange={(e) => ctx.setPeriod({ preset: 'custom', from: e.target.value, to: ctx.period.to || '2026-06-11' })}
-                  style={{ padding: '8px 10px', border: '1px solid var(--border)', borderRadius: 8, fontSize: 13, fontFamily: 'inherit', background: 'var(--surface-2)', color: 'var(--ink)' }} />
+                  style={{ padding: '8px 10px', border: '1px solid var(--border)', borderRadius: 4, fontSize: 13, fontFamily: 'inherit', background: 'var(--surface-2)', color: 'var(--ink)' }} />
                 <input type="date" value={ctx.period.to || ''} onChange={(e) => ctx.setPeriod({ preset: 'custom', from: ctx.period.from || '2026-04-01', to: e.target.value })}
-                  style={{ padding: '8px 10px', border: '1px solid var(--border)', borderRadius: 8, fontSize: 13, fontFamily: 'inherit', background: 'var(--surface-2)', color: 'var(--ink)' }} />
+                  style={{ padding: '8px 10px', border: '1px solid var(--border)', borderRadius: 4, fontSize: 13, fontFamily: 'inherit', background: 'var(--surface-2)', color: 'var(--ink)' }} />
               </div>
             </div>
           </div>
@@ -154,7 +154,7 @@ function Sidebar() {
   return (
     <aside style={{ width: 244, flexShrink: 0, borderRight: '1px solid var(--border)', background: 'var(--surface)', display: 'flex', flexDirection: 'column', position: 'sticky', top: 0, height: '100vh' }}>
       <div style={{ padding: '22px 22px 18px', display: 'flex', alignItems: 'center', gap: 11 }}>
-        <div style={{ width: 34, height: 34, borderRadius: 10, background: 'var(--ink)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: 34, height: 34, borderRadius: 4, background: 'var(--ink)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <window.Icon name="stats" size={18} stroke={2.4} />
         </div>
         <div>
@@ -167,7 +167,7 @@ function Sidebar() {
           const active = ctx.route === n.id;
           return (
             <button key={n.id} onClick={() => ctx.nav(n.id)} className="tj-nav" data-tour-nav={n.id} style={{
-              display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 10, border: 'none',
+              display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 4, border: 'none',
               cursor: 'pointer', fontFamily: 'inherit', fontSize: 14, fontWeight: 600, textAlign: 'left',
               background: active ? 'var(--ink)' : 'transparent', color: active ? '#fff' : 'var(--ink-2)', width: '100%'
             }}>
@@ -669,7 +669,7 @@ function App() {
             backdropFilter: 'blur(2px)', display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none',
           }}>
             <div style={{
-              border: '2.5px dashed #fff', borderRadius: 20, padding: '48px 64px', display: 'flex', flexDirection: 'column',
+              border: '2.5px dashed #fff', borderRadius: 7, padding: '48px 64px', display: 'flex', flexDirection: 'column',
               alignItems: 'center', gap: 14, color: '#fff', background: 'color-mix(in oklab, var(--ink) 70%, transparent)',
             }}>
               <window.Icon name="journal" size={38} stroke={1.6} />

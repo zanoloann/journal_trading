@@ -51,7 +51,7 @@ function AddTradeModal({ onClose, tradeId }) {
     <Modal onClose={onClose} width={680} title={editing ? 'Modifier le trade' : 'Nouveau trade'} subtitle="SP500 future · les frais (1,04 $/contrat) sont déduits automatiquement"
       footer={<><window.Button variant="ghost" onClick={onClose}>Annuler</window.Button><window.Button variant="primary" icon="check" onClick={save} style={{ opacity: legs.length ? 1 : .5, pointerEvents: legs.length ? 'auto' : 'none' }}>{editing ? 'Enregistrer les modifications' : 'Enregistrer le trade'}</window.Button></>}>
       {ctx.accounts.length === 0 && (
-        <div style={{ marginBottom: 16, padding: '12px 14px', borderRadius: 10, background: 'var(--warn-bg)', color: 'var(--warn)', fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ marginBottom: 16, padding: '12px 14px', borderRadius: 4, background: 'var(--warn-bg)', color: 'var(--warn)', fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}>
           <window.Icon name="alert" size={16} /> Aucun compte. Créez d'abord un compte dans l'onglet « Comptes » pour enregistrer un trade.
         </div>
       )}
@@ -64,7 +64,7 @@ function AddTradeModal({ onClose, tradeId }) {
       </div>
 
       {/* result + mindset */}
-      <div style={{ marginTop: 16, padding: 16, borderRadius: 12, background: 'var(--surface-2)', border: '1px solid var(--border)', display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 16, alignItems: 'start' }}>
+      <div style={{ marginTop: 16, padding: 16, borderRadius: 4, background: 'var(--surface-2)', border: '1px solid var(--border)', display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 16, alignItems: 'start' }}>
         <Field label="Résultat brut sur le maître ($)" hint="Saisir une valeur négative pour une perte">
           <input type="number" step="0.01" style={{ ...inputStyle, fontSize: 16, fontWeight: 700, color: grossBase > 0 ? 'var(--profit)' : grossBase < 0 ? 'var(--loss)' : 'var(--ink)' }} value={f.gross} onChange={e => set('gross', e.target.value)} placeholder="ex. 420 ou -180" />
         </Field>
@@ -92,9 +92,9 @@ function AddTradeModal({ onClose, tradeId }) {
             const cAcc = isMaster ? contractsBase : Math.max(1, Math.round(contractsBase * coef));
             const net = on ? +(grossBase * coef).toFixed(2) - window.accountFee(a, f.symbol) * cAcc : 0;
             return (
-              <div key={a.id} style={{ display: 'grid', gridTemplateColumns: '28px 1fr auto auto', gap: 12, alignItems: 'center', padding: '10px 14px', borderRadius: 11, border: '1px solid ' + (on ? 'var(--ink)' : 'var(--border)'), background: on ? 'var(--surface)' : 'var(--surface-2)', opacity: on ? 1 : .65 }}>
+              <div key={a.id} style={{ display: 'grid', gridTemplateColumns: '28px 1fr auto auto', gap: 12, alignItems: 'center', padding: '10px 14px', borderRadius: 4, border: '1px solid ' + (on ? 'var(--ink)' : 'var(--border)'), background: on ? 'var(--surface)' : 'var(--surface-2)', opacity: on ? 1 : .65 }}>
                 <button onClick={() => setApplied(p => ({ ...p, [a.id]: { ...p[a.id], on: !p[a.id].on } }))}
-                  style={{ width: 22, height: 22, borderRadius: 7, border: '1.5px solid ' + (on ? 'var(--ink)' : 'var(--border-strong)'), background: on ? 'var(--ink)' : 'transparent', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                  style={{ width: 22, height: 22, borderRadius: 4, border: '1.5px solid ' + (on ? 'var(--ink)' : 'var(--border-strong)'), background: on ? 'var(--ink)' : 'transparent', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
                   {on && <window.Icon name="check" size={14} stroke={3} />}
                 </button>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
@@ -106,7 +106,7 @@ function AddTradeModal({ onClose, tradeId }) {
                   <span style={{ fontSize: 12, color: 'var(--ink-3)' }}>×</span>
                   <input type="number" step="1" min="1" disabled={isMaster} value={isMaster ? 1 : ap.coef}
                     onChange={e => setApplied(p => ({ ...p, [a.id]: { ...p[a.id], coef: e.target.value } }))}
-                    style={{ width: 52, padding: '6px 8px', border: '1px solid var(--border)', borderRadius: 8, fontSize: 13, fontFamily: 'inherit', textAlign: 'center', background: isMaster ? 'var(--surface-2)' : 'var(--surface)', color: 'var(--ink)' }} />
+                    style={{ width: 52, padding: '6px 8px', border: '1px solid var(--border)', borderRadius: 4, fontSize: 13, fontFamily: 'inherit', textAlign: 'center', background: isMaster ? 'var(--surface-2)' : 'var(--surface)', color: 'var(--ink)' }} />
                   <span style={{ fontSize: 11.5, color: 'var(--ink-3)', minWidth: 56 }}>{on ? cAcc + ' cont.' : ''}</span>
                 </div>
                 <window.PnL value={+net.toFixed(2)} style={{ fontWeight: 700, fontSize: 13.5, minWidth: 72, textAlign: 'right' }} />
@@ -114,7 +114,7 @@ function AddTradeModal({ onClose, tradeId }) {
             );
           })}
         </div>
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 18, marginTop: 12, padding: '10px 14px', borderRadius: 11, background: 'var(--ink)', color: '#fff' }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 18, marginTop: 12, padding: '10px 14px', borderRadius: 4, background: 'var(--ink)', color: '#fff' }}>
           <span style={{ fontSize: 13, opacity: .7 }}>Total frais <strong style={{ opacity: 1 }}>−{window.fmtNum(totalFees, 2)} $</strong></span>
           <span style={{ fontSize: 13 }}>Impact net total <strong style={{ color: totalNet >= 0 ? '#7ee0aa' : '#ff9d9b', fontVariantNumeric: 'tabular-nums' }}>{(totalNet >= 0 ? '+' : '−') + window.fmtNum(Math.abs(totalNet), 0) + ' $'}</strong></span>
         </div>

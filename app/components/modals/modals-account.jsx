@@ -113,7 +113,7 @@ function AccountModal({ accountId, onClose }) {
       </div>
 
       {/* Account-level drawdown — read-only summary (configured in Paramètres, per account type) */}
-      <div style={{ marginTop: 16, padding: 16, borderRadius: 12, background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
+      <div style={{ marginTop: 16, padding: 16, borderRadius: 4, background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, fontSize: 13.5 }}><window.Icon name="stats" size={16} /> Drawdown maximum</div>
         {(f.ddType === 'trailing') ? (
           <div style={{ fontSize: 13, color: 'var(--ink-2)', marginTop: 8, lineHeight: 1.6 }}>
@@ -131,7 +131,7 @@ function AccountModal({ accountId, onClose }) {
       </div>
 
       {/* daily loss limit — read-only summary */}
-      <div style={{ marginTop: 16, padding: 16, borderRadius: 12, background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
+      <div style={{ marginTop: 16, padding: 16, borderRadius: 4, background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, fontSize: 13.5 }}><window.Icon name="alert" size={16} /> Perte journalière max. (DLL)</div>
         {f.hasDll ? (
           <div style={{ fontSize: 13, color: 'var(--ink-2)', marginTop: 8, lineHeight: 1.6 }}>
@@ -144,7 +144,7 @@ function AccountModal({ accountId, onClose }) {
       </div>
 
       {/* inactivity rule — read-only summary (configured in Paramètres, per account type) */}
-      <div style={{ marginTop: 16, padding: 16, borderRadius: 12, background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
+      <div style={{ marginTop: 16, padding: 16, borderRadius: 4, background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, fontSize: 13.5 }}>
           <window.Icon name="calendar" size={16} /> Règle d'inactivité
         </div>
@@ -160,7 +160,7 @@ function AccountModal({ accountId, onClose }) {
       </div>
 
       {f.isEval && (
-        <div style={{ marginTop: 16, padding: 16, borderRadius: 12, background: 'var(--info-bg)', border: '1px solid color-mix(in oklab, var(--info) 25%, transparent)' }}>
+        <div style={{ marginTop: 16, padding: 16, borderRadius: 4, background: 'var(--info-bg)', border: '1px solid color-mix(in oklab, var(--info) 25%, transparent)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, fontSize: 13.5, color: 'var(--info)' }}><window.Icon name="target" size={16} /> Compte d'évaluation</div>
           <div style={{ fontSize: 13, color: 'var(--ink-2)', marginTop: 8, lineHeight: 1.6 }}>
             Objectif de profit <strong>{window.fmtMoney(Number(f.profitTarget) || 0, { signed: false })}</strong> · perte max <strong>{window.fmtMoney(Number(f.maxLossLimit) || 0, { signed: false })}</strong> · consistance &lt; <strong>{f.evalConsistencyPct} %</strong>.
@@ -184,7 +184,7 @@ function AccountModal({ accountId, onClose }) {
           });
         }
         return (
-          <div style={{ marginTop: 16, padding: 16, borderRadius: 12, background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
+          <div style={{ marginTop: 16, padding: 16, borderRadius: 4, background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 12 }}>
               <div style={{ fontWeight: 700, fontSize: 13.5, display: 'flex', alignItems: 'center', gap: 8 }}><window.Icon name="wallet" size={16} /> Capital du compte</div>
               <div style={{ fontSize: 12.5, color: 'var(--ink-3)' }}>Solde actuel <strong style={{ color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>{window.fmtMoney(currentBal, { signed: false })}</strong></div>
@@ -204,7 +204,7 @@ function AccountModal({ accountId, onClose }) {
                 <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink-2)', marginBottom: 8 }}>Historique des réévaluations</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {adjustments.map(adj => (
-                    <div key={adj.id} style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto auto', gap: 10, alignItems: 'center', padding: '8px 12px', borderRadius: 9, background: 'var(--surface)', border: '1px solid var(--border)' }}>
+                    <div key={adj.id} style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto auto', gap: 10, alignItems: 'center', padding: '8px 12px', borderRadius: 4, background: 'var(--surface)', border: '1px solid var(--border)' }}>
                       <span style={{ fontSize: 12, color: 'var(--ink-3)', fontVariantNumeric: 'tabular-nums' }}>{window.fmtDateFR(adj.date)}</span>
                       <span style={{ fontSize: 12.5, fontWeight: 600 }}>{adj.label}</span>
                       <window.PnL value={adj.delta} dec={2} style={{ fontSize: 12.5, fontWeight: 700 }} />
@@ -222,7 +222,7 @@ function AccountModal({ accountId, onClose }) {
         <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--ink-2)', marginBottom: 8 }}>Couleur</div>
         <div style={{ display: 'flex', gap: 9 }}>
           {palette.map(c => (
-            <button key={c} onClick={() => set('color', c)} style={{ width: 30, height: 30, borderRadius: 9, background: c, border: f.color === c ? '2px solid var(--ink)' : '2px solid transparent', outline: f.color === c ? '2px solid var(--surface)' : 'none', cursor: 'pointer' }} />
+            <button key={c} onClick={() => set('color', c)} style={{ width: 30, height: 30, borderRadius: 4, background: c, border: f.color === c ? '2px solid var(--ink)' : '2px solid transparent', outline: f.color === c ? '2px solid var(--surface)' : 'none', cursor: 'pointer' }} />
           ))}
         </div>
       </div>

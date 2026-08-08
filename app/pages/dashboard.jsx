@@ -24,7 +24,7 @@ function AccountHealth({ compact }) {
           return (
             <div key={a.id} onClick={() => { ctx.setScope(a.id); ctx.nav('accounts'); }}
               className="tj-row" style={{
-                padding: '10px 12px', borderRadius: 12, background: 'var(--surface-2)',
+                padding: '10px 12px', borderRadius: 4, background: 'var(--surface-2)',
                 border: '1px solid ' + (health.overall !== 'profit' ? healthVar : 'var(--border)'), cursor: 'pointer',
               }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 10, alignItems: 'center' }}>
@@ -127,7 +127,7 @@ function RecentTrades({ scope, limit = 6 }) {
               display: 'grid', gridTemplateColumns: '38px 1fr auto', gap: 12, alignItems: 'center',
               padding: '11px 6px', borderBottom: '1px solid var(--border)', cursor: 'pointer',
             }}>
-              <div style={{ width: 38, height: 38, borderRadius: 10, background: 'var(--surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, fontFamily: 'var(--font-mono)' }}>
+              <div style={{ width: 38, height: 38, borderRadius: 4, background: 'var(--surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, fontFamily: 'var(--font-mono)' }}>
                 {t.symbol.slice(0, 4)}
               </div>
               <div style={{ minWidth: 0 }}>
@@ -263,10 +263,10 @@ function ReplayBanner() {
   const st = window.computeStats(ctx.trades, window.REPLAY_ACCOUNT_ID);
   if (!st.total) return null;
   return (
-    <div style={{ borderRadius: 16, padding: '16px 20px', background: 'repeating-linear-gradient(135deg, var(--surface-2), var(--surface-2) 10px, var(--surface) 10px, var(--surface) 20px)', border: '1px dashed var(--border-strong)' }}>
+    <div style={{ borderRadius: 7, padding: '16px 20px', background: 'repeating-linear-gradient(135deg, var(--surface-2), var(--surface-2) 10px, var(--surface) 10px, var(--surface) 20px)', border: '1px dashed var(--border-strong)' }}>
       <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr 1fr 1fr 1fr', gap: 16, alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-          <div style={{ width: 34, height: 34, borderRadius: 10, background: 'var(--ink-3)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', flexShrink: 0 }}>
+          <div style={{ width: 34, height: 34, borderRadius: 4, background: 'var(--ink-3)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', flexShrink: 0 }}>
             <window.Icon name="journal" size={16} />
           </div>
           <div style={{ minWidth: 0 }}>
@@ -305,7 +305,7 @@ function Dashboard() {
     return (
       <window.Card pad={48}>
         <div style={{ textAlign: 'center', maxWidth: 440, margin: '0 auto' }}>
-          <div style={{ width: 56, height: 56, borderRadius: 16, background: 'var(--surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px', color: 'var(--ink-3)' }}>
+          <div style={{ width: 56, height: 56, borderRadius: 7, background: 'var(--surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px', color: 'var(--ink-3)' }}>
             <window.Icon name="dashboard" size={26} />
           </div>
           <h3 style={{ margin: '0 0 8px', fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 600 }}>Bienvenue dans votre journal</h3>

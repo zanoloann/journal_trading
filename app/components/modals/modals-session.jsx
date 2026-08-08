@@ -204,7 +204,7 @@ function SessionModal({ onClose }) {
     onClose();
   }
 
-  const inS = { padding: '8px 9px', border: '1px solid var(--border)', borderRadius: 8, fontSize: 13.5, fontFamily: 'inherit', background: 'var(--surface)', color: 'var(--ink)', boxSizing: 'border-box' };
+  const inS = { padding: '8px 9px', border: '1px solid var(--border)', borderRadius: 4, fontSize: 13.5, fontFamily: 'inherit', background: 'var(--surface)', color: 'var(--ink)', boxSizing: 'border-box' };
   const dow = new Date(date + 'T00:00:00').getDay();
   const isWeekend = dow === 0 || dow === 6;
   const canSave = replay ? (noTrade ? true : validRows.length > 0) : (isWeekend ? false : (noTrade ? true : (entryMode === 'manual' ? (manualSel.length > 0 && masterAmount !== 0) : (validRows.length && selected.length))));
@@ -219,7 +219,7 @@ function SessionModal({ onClose }) {
       <Modal onClose={onClose} width={760} title="Importer une séance (CSV)" subtitle={imported.length + ' jour' + (imported.length > 1 ? 's' : '') + ' détecté' + (imported.length > 1 ? 's' : '') + ' · cochez les comptes utilisés pour chaque journée'}
         footer={<><window.Button variant="ghost" onClick={() => setImported(null)}>Retour</window.Button><window.Button variant="primary" icon="check" onClick={saveImport} style={{ opacity: importTradeCount ? 1 : .5, pointerEvents: importTradeCount ? 'auto' : 'none' }}>Importer {importTradeCount} trade{importTradeCount > 1 ? 's' : ''}</window.Button></>}>
         {importConflicts > 0 && (
-          <div style={{ marginBottom: 16, padding: '12px 14px', borderRadius: 10, background: 'var(--warn-bg)', color: 'var(--warn)', fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ marginBottom: 16, padding: '12px 14px', borderRadius: 4, background: 'var(--warn-bg)', color: 'var(--warn)', fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}>
             <window.Icon name="alert" size={16} /> {importConflicts} journée{importConflicts > 1 ? 's' : ''} possède{importConflicts > 1 ? 'nt' : ''} déjà des trades dans l'application. L'import ajoutera de nouveaux trades sans remplacer les existants.
           </div>
         )}
@@ -231,7 +231,7 @@ function SessionModal({ onClose }) {
             const conflict = ctx.trades.some(t => t.date === d.date && !t.noTrade);
             const nbOn = ctx.accounts.filter(a => d.applied[a.id] && d.applied[a.id].on).length;
             return (
-              <div key={i} style={{ border: '1px solid ' + (weekendDay ? 'var(--loss)' : 'var(--border)'), borderRadius: 14, overflow: 'hidden' }}>
+              <div key={i} style={{ border: '1px solid ' + (weekendDay ? 'var(--loss)' : 'var(--border)'), borderRadius: 7, overflow: 'hidden' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '12px 16px', background: 'var(--surface-2)', flexWrap: 'wrap' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <span style={{ fontWeight: 700, fontSize: 14, textTransform: 'capitalize' }}>{new Date(d.date + 'T00:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
@@ -245,7 +245,7 @@ function SessionModal({ onClose }) {
                   {/* trades preview */}
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
                     {d.trades.map((t, k) => (
-                      <span key={k} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 9px', borderRadius: 8, background: 'var(--surface-2)', fontSize: 12 }}>
+                      <span key={k} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 9px', borderRadius: 4, background: 'var(--surface-2)', fontSize: 12 }}>
                         <strong style={{ fontFamily: 'var(--font-mono)', fontSize: 11 }}>{t.symbol}</strong>
                         <span style={{ color: 'var(--ink-3)' }}>{t.contracts}c</span>
                         <window.PnL value={t.gross} dec={2} style={{ fontWeight: 700 }} />
@@ -259,7 +259,7 @@ function SessionModal({ onClose }) {
                   </div>
                   {/* account toggles */}
                   {weekendDay ? (
-                    <div style={{ padding: '10px 12px', borderRadius: 9, background: 'var(--loss-bg)', color: 'var(--loss)', fontSize: 12.5, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ padding: '10px 12px', borderRadius: 4, background: 'var(--loss-bg)', color: 'var(--loss)', fontSize: 12.5, display: 'flex', alignItems: 'center', gap: 8 }}>
                       <window.Icon name="alert" size={15} /> Journée de week-end — non importable.
                     </div>
                   ) : (
@@ -270,11 +270,11 @@ function SessionModal({ onClose }) {
                       const on = d.applied[a.id] && d.applied[a.id].on;
                       return (
                         <button key={a.id} onClick={() => toggleDayAcc(i, a.id)} style={{
-                          display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 11px', borderRadius: 9, cursor: 'pointer',
+                          display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 11px', borderRadius: 4, cursor: 'pointer',
                           border: '1px solid ' + (on ? 'var(--ink)' : 'var(--border)'), background: on ? 'var(--surface)' : 'var(--surface-2)',
                           color: on ? 'var(--ink)' : 'var(--ink-3)', fontFamily: 'inherit', fontSize: 13, fontWeight: 600, opacity: on ? 1 : .7,
                         }}>
-                          <span style={{ width: 16, height: 16, borderRadius: 5, border: '1.5px solid ' + (on ? 'var(--ink)' : 'var(--border-strong)'), background: on ? 'var(--ink)' : 'transparent', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{on && <window.Icon name="check" size={11} stroke={3} />}</span>
+                          <span style={{ width: 16, height: 16, borderRadius: 4, border: '1.5px solid ' + (on ? 'var(--ink)' : 'var(--border-strong)'), background: on ? 'var(--ink)' : 'transparent', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{on && <window.Icon name="check" size={11} stroke={3} />}</span>
                           <window.AccountDot color={a.color} />
                           {a.name}{a.role !== 'master' ? ' ×' + a.coef : ''}
                         </button>
@@ -296,12 +296,12 @@ function SessionModal({ onClose }) {
     <Modal onClose={onClose} width={720} title="Nouvelle séance" subtitle="Saisissez les trades de la séance · frais 1,04 $/contrat déduits"
       footer={<><window.Button variant="ghost" onClick={onClose}>Annuler</window.Button><window.Button variant="primary" icon="check" onClick={save} style={{ opacity: canSave ? 1 : .5, pointerEvents: canSave ? 'auto' : 'none' }}>{noTrade ? ('Marquer No Trade' + (replay ? ' (replay)' : '')) : replay ? ('Enregistrer ' + (validRows.length || '') + ' replay' + (validRows.length > 1 ? 's' : '')) : (entryMode === 'manual' ? 'Enregistrer la séance' : ('Enregistrer ' + (validRows.length || '') + ' trade' + (validRows.length > 1 ? 's' : '')))}</window.Button></>}>
       {ctx.accounts.length === 0 && !noTrade && !replay && (
-        <div style={{ marginBottom: 16, padding: '12px 14px', borderRadius: 10, background: 'var(--warn-bg)', color: 'var(--warn)', fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ marginBottom: 16, padding: '12px 14px', borderRadius: 4, background: 'var(--warn-bg)', color: 'var(--warn)', fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}>
           <window.Icon name="alert" size={16} /> Aucun compte. Créez d'abord un compte dans l'onglet « Comptes ».
         </div>
       )}
       {isWeekend && !replay && (
-        <div style={{ marginBottom: 16, padding: '12px 14px', borderRadius: 10, background: 'var(--loss-bg)', color: 'var(--loss)', fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ marginBottom: 16, padding: '12px 14px', borderRadius: 4, background: 'var(--loss-bg)', color: 'var(--loss)', fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}>
           <window.Icon name="alert" size={16} /> Cette date tombe un week-end — aucun enregistrement possible. Choisissez un jour de semaine.
         </div>
       )}
@@ -313,7 +313,7 @@ function SessionModal({ onClose }) {
         onDragOver={e => { e.preventDefault(); if (!dragOver) setDragOver(true); }}
         onDragLeave={e => { e.preventDefault(); setDragOver(false); }}
         onDrop={onDrop}
-        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6, textAlign: 'center', padding: '20px 16px', borderRadius: 12, cursor: 'pointer', marginBottom: 16, transition: 'all .15s', border: '1.5px dashed ' + (dragOver ? 'var(--ink)' : 'var(--border-strong)'), background: dragOver ? 'var(--surface-2)' : 'transparent' }}>
+        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6, textAlign: 'center', padding: '20px 16px', borderRadius: 4, cursor: 'pointer', marginBottom: 16, transition: 'all .15s', border: '1.5px dashed ' + (dragOver ? 'var(--ink)' : 'var(--border-strong)'), background: dragOver ? 'var(--surface-2)' : 'transparent' }}>
         <window.Icon name="arrowUp" size={20} style={{ color: dragOver ? 'var(--ink)' : 'var(--ink-3)' }} />
         <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink-2)' }}>{dragOver ? 'Déposez le fichier ici' : 'Glissez-déposez un CSV de positions'}</span>
         <span style={{ fontSize: 11.5, color: 'var(--ink-3)' }}>ou cliquez pour parcourir · .csv</span>
@@ -321,24 +321,24 @@ function SessionModal({ onClose }) {
       </div>
       )}
       {importErr && !replay && (
-        <div style={{ marginBottom: 16, padding: '12px 14px', borderRadius: 10, background: 'var(--loss-bg)', color: 'var(--loss)', fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ marginBottom: 16, padding: '12px 14px', borderRadius: 4, background: 'var(--loss-bg)', color: 'var(--loss)', fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}>
           <window.Icon name="alert" size={16} /> {importErr}
         </div>
       )}
 
       {/* Replay toggle — practice/backtest trades, isolated on a single fictitious account, excluded from all real P&L */}
-      <label style={{ display: 'flex', alignItems: 'center', gap: 11, cursor: 'pointer', padding: '12px 14px', borderRadius: 11, border: '1px solid ' + (replay ? 'var(--ink)' : 'var(--border)'), background: replay ? 'var(--surface-2)' : 'transparent', marginBottom: 10 }}>
+      <label style={{ display: 'flex', alignItems: 'center', gap: 11, cursor: 'pointer', padding: '12px 14px', borderRadius: 4, border: '1px solid ' + (replay ? 'var(--ink)' : 'var(--border)'), background: replay ? 'var(--surface-2)' : 'transparent', marginBottom: 10 }}>
         <button type="button" onClick={() => setReplay(v => !v)}
-          style={{ width: 22, height: 22, borderRadius: 7, border: '1.5px solid ' + (replay ? 'var(--ink)' : 'var(--border-strong)'), background: replay ? 'var(--ink)' : 'transparent', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
+          style={{ width: 22, height: 22, borderRadius: 4, border: '1.5px solid ' + (replay ? 'var(--ink)' : 'var(--border-strong)'), background: replay ? 'var(--ink)' : 'transparent', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
           {replay && <window.Icon name="check" size={14} stroke={3} />}
         </button>
         <span><span style={{ fontWeight: 700, fontSize: 13.5 }}>Replay</span> <span style={{ fontSize: 12.5, color: 'var(--ink-3)' }}>— séance d'entraînement, compte fictif, sans impact sur vos comptes réels</span></span>
       </label>
 
       {/* No Trade toggle — combinable with Replay: pas de position prise pendant une séance de replay → R=0 */}
-      <label style={{ display: 'flex', alignItems: 'center', gap: 11, cursor: 'pointer', padding: '12px 14px', borderRadius: 11, border: '1px solid ' + (noTrade ? 'var(--ink)' : 'var(--border)'), background: noTrade ? 'var(--surface-2)' : 'transparent', marginBottom: 16 }}>
+      <label style={{ display: 'flex', alignItems: 'center', gap: 11, cursor: 'pointer', padding: '12px 14px', borderRadius: 4, border: '1px solid ' + (noTrade ? 'var(--ink)' : 'var(--border)'), background: noTrade ? 'var(--surface-2)' : 'transparent', marginBottom: 16 }}>
         <button type="button" onClick={() => setNoTrade(v => !v)}
-          style={{ width: 22, height: 22, borderRadius: 7, border: '1.5px solid ' + (noTrade ? 'var(--ink)' : 'var(--border-strong)'), background: noTrade ? 'var(--ink)' : 'transparent', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
+          style={{ width: 22, height: 22, borderRadius: 4, border: '1.5px solid ' + (noTrade ? 'var(--ink)' : 'var(--border-strong)'), background: noTrade ? 'var(--ink)' : 'transparent', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
           {noTrade && <window.Icon name="check" size={14} stroke={3} />}
         </button>
         <span><span style={{ fontWeight: 700, fontSize: 13.5 }}>No Trade</span> <span style={{ fontSize: 12.5, color: 'var(--ink-3)' }}>— aucune position prise ce jour{replay ? ' (R = 0 sur le replay)' : ''}</span></span>
@@ -388,9 +388,9 @@ function SessionModal({ onClose }) {
       </div>
 
       <div style={{ marginTop: 16 }}>
-        <div style={{ display: 'inline-flex', background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 10, padding: 3 }}>
+        <div style={{ display: 'inline-flex', background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 4, padding: 3 }}>
           {[['coef', 'Par coefficient'], ['manual', 'Par montant (manuel)']].map(([v, lbl]) => (
-            <button key={v} onClick={() => setEntryMode(v)} style={{ border: 'none', cursor: 'pointer', borderRadius: 7, padding: '6px 14px', fontSize: 12.5, fontWeight: 600, fontFamily: 'inherit', background: entryMode === v ? 'var(--surface)' : 'transparent', color: entryMode === v ? 'var(--ink)' : 'var(--ink-2)', boxShadow: entryMode === v ? '0 1px 3px rgba(20,20,18,.12)' : 'none' }}>{lbl}</button>
+            <button key={v} onClick={() => setEntryMode(v)} style={{ border: 'none', cursor: 'pointer', borderRadius: 4, padding: '6px 14px', fontSize: 12.5, fontWeight: 600, fontFamily: 'inherit', background: entryMode === v ? 'var(--surface)' : 'transparent', color: entryMode === v ? 'var(--ink)' : 'var(--ink-2)', boxShadow: entryMode === v ? '0 1px 3px rgba(20,20,18,.12)' : 'none' }}>{lbl}</button>
           ))}
         </div>
         <span style={{ fontSize: 11.5, color: 'var(--ink-3)', marginLeft: 12 }}>
@@ -443,9 +443,9 @@ function SessionModal({ onClose }) {
             const ap = applied[a.id];
             const on = ap.on;
             return (
-              <div key={a.id} style={{ display: 'grid', gridTemplateColumns: '28px 1fr auto', gap: 12, alignItems: 'center', padding: '10px 14px', borderRadius: 11, border: '1px solid ' + (on ? 'var(--ink)' : 'var(--border)'), background: on ? 'var(--surface)' : 'var(--surface-2)', opacity: on ? 1 : .65 }}>
+              <div key={a.id} style={{ display: 'grid', gridTemplateColumns: '28px 1fr auto', gap: 12, alignItems: 'center', padding: '10px 14px', borderRadius: 4, border: '1px solid ' + (on ? 'var(--ink)' : 'var(--border)'), background: on ? 'var(--surface)' : 'var(--surface-2)', opacity: on ? 1 : .65 }}>
                 <button onClick={() => setApplied(p => ({ ...p, [a.id]: { ...p[a.id], on: !p[a.id].on } }))}
-                  style={{ width: 22, height: 22, borderRadius: 7, border: '1.5px solid ' + (on ? 'var(--ink)' : 'var(--border-strong)'), background: on ? 'var(--ink)' : 'transparent', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                  style={{ width: 22, height: 22, borderRadius: 4, border: '1.5px solid ' + (on ? 'var(--ink)' : 'var(--border-strong)'), background: on ? 'var(--ink)' : 'transparent', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
                   {on && <window.Icon name="check" size={14} stroke={3} />}
                 </button>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
@@ -462,21 +462,21 @@ function SessionModal({ onClose }) {
                     return (<>
                       <input type="number" step="0.01" placeholder="$ brut" value={amt == null ? '' : amt} disabled={!on}
                         onChange={e => setManual(m => ({ ...m, amounts: { ...m.amounts, [a.id]: e.target.value } }))}
-                        style={{ width: 88, padding: '6px 8px', border: '1px solid var(--border)', borderRadius: 8, fontSize: 13, fontFamily: 'inherit', textAlign: 'right', background: on ? 'var(--surface)' : 'var(--surface-2)', color: 'var(--ink)' }} />
+                        style={{ width: 88, padding: '6px 8px', border: '1px solid var(--border)', borderRadius: 4, fontSize: 13, fontFamily: 'inherit', textAlign: 'right', background: on ? 'var(--surface)' : 'var(--surface-2)', color: 'var(--ink)' }} />
                       <span style={{ fontSize: 11, color: 'var(--ink-3)', minWidth: 46 }}>{cf != null ? '×' + cf : ''}</span>
                     </>);
                   })() : (<>
                     <span style={{ fontSize: 12, color: 'var(--ink-3)' }}>×</span>
                     <input type="number" step="1" min="1" disabled={isMaster} value={isMaster ? 1 : ap.coef}
                       onChange={e => setApplied(p => ({ ...p, [a.id]: { ...p[a.id], coef: e.target.value } }))}
-                      style={{ width: 52, padding: '6px 8px', border: '1px solid var(--border)', borderRadius: 8, fontSize: 13, fontFamily: 'inherit', textAlign: 'center', background: isMaster ? 'var(--surface-2)' : 'var(--surface)', color: 'var(--ink)' }} />
+                      style={{ width: 52, padding: '6px 8px', border: '1px solid var(--border)', borderRadius: 4, fontSize: 13, fontFamily: 'inherit', textAlign: 'center', background: isMaster ? 'var(--surface-2)' : 'var(--surface)', color: 'var(--ink)' }} />
                   </>)}
                 </div>
               </div>
             );
           })}
         </div>
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 18, marginTop: 12, padding: '10px 14px', borderRadius: 11, background: 'var(--ink)', color: '#fff' }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 18, marginTop: 12, padding: '10px 14px', borderRadius: 4, background: 'var(--ink)', color: '#fff' }}>
           <span style={{ fontSize: 13, opacity: .7 }}>{validRows.length} trade{validRows.length > 1 ? 's' : ''}</span>
           <span style={{ fontSize: 13 }}>Séance brute (maître) <strong style={{ color: masterGross >= 0 ? '#7ee0aa' : '#ff9d9b', fontVariantNumeric: 'tabular-nums' }}>{(masterGross >= 0 ? '+' : '−') + window.fmtNum(Math.abs(masterGross), 2) + ' $'}</strong></span>
         </div>
