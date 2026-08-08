@@ -39,6 +39,37 @@
         ],
         "payoutSplit": 100,
         "activationFee": 99
+      },
+      {
+        "id": "apex_50_legacy",
+        "label": "50K Legacy (avant 01/03/2026)",
+        "size": 50000,
+        "ddType": "trailing",
+        "ddAmount": 2500,
+        "hasDll": false,
+        "hasInactivity": true,
+        "inactMinNet": 150,
+        "inactMinQualDays": 1,
+        "inactWindow": 30,
+        "inactCloseDays": 30,
+        "hasPayout": true,
+        "payoutModel": "scale",
+        "payoutMinDays": 5,
+        "payoutMinTradingDays": 8,
+        "payoutMinNet": 50,
+        "consistencyPct": 30,
+        "safetyNet": 2600,
+        "safetyNetMaxPayouts": 3,
+        "payoutMinBalance": 52600,
+        "payoutScale": [
+          2000,
+          2000,
+          2000,
+          2000,
+          2000
+        ],
+        "payoutCapExpires": true,
+        "payoutSplitNote": "100 % sur les premiers 25 000 $ cumulés sur ce compte, puis 90 % ; repasse à 100 % dès le 6ᵉ payout approuvé."
       }
     ]
   },
